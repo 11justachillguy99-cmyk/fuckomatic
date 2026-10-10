@@ -1309,7 +1309,7 @@
         [
           "Feature flags",
           "dev",
-          "Toggle the word filter, room creation, and room limit at runtime.",
+          "Toggle room creation and adjust room limits at runtime.",
         ],
         [
           "Maintenance mode",

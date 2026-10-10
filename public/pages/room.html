@@ -319,9 +319,7 @@
           display: none;
         }
       }
-      /* Navbar toggles: each icon keeps one colour so the row reads at a
-         glance. The filter shield is green when it protects you and red with
-         a slash when it is off, same slash the bots toggle draws. */
+      /* Navbar toggles */
       #muteToggle i {
         font-size: 17px;
         width: 20px;
@@ -330,166 +328,9 @@
       #muteToggle.sound-off i {
         color: #8d8d8d;
       }
-      #filterToggle {
-        position: relative;
-      }
-      #filterToggle i {
-        font-size: 17px;
-        color: #4ade80;
-        transition: color 0.2s ease;
-      }
-      #filterToggle.filter-off i {
-        color: #e5484d;
-      }
-      #filterToggle.filter-off::after {
-        content: "";
-        position: absolute;
-        left: 7px;
-        right: 7px;
-        top: 50%;
-        height: 2px;
-        background: #e5484d;
-        transform: rotate(-38deg);
-        border-radius: 2px;
-        pointer-events: none;
-      }
       #layoutToggle {
         font-size: 18px;
         color: #5aa9ff;
-      }
-
-      /* Feature announcement modal: the house card - flat dark overlay, black
-         card with a cream header strip, square corners, orange fills. */
-      .feature-announce-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 99999;
-        background: rgba(0, 0, 0, 0.85);
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-      }
-      .feature-announce-overlay.show {
-        display: flex;
-        animation: fadeIn 0.2s ease-out;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      .feature-announce-box {
-        background: #000;
-        border: 1px solid var(--tk-border, #616161);
-        max-width: 440px;
-        width: 100%;
-        text-align: left;
-        overflow: hidden;
-      }
-      .feature-announce-head {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        background: var(--tk-cream, #fdf5e6);
-        color: #000;
-        padding: 13px 16px;
-      }
-      .feature-announce-icon {
-        font-size: 17px;
-        color: #4ade80;
-      }
-      .feature-announce-title {
-        flex: 1;
-        margin: 0;
-        color: #000;
-        font-size: 16px;
-        font-weight: bold;
-        letter-spacing: 0.2px;
-      }
-      .feature-announce-tag {
-        background: var(--tk-accent);
-        color: #000;
-        font-size: 10px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        padding: 2px 7px;
-      }
-      .feature-announce-body {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 16px;
-      }
-      .feature-announce-lead {
-        margin: 0;
-        color: #dcdcdc;
-        font-size: 14px;
-        line-height: 1.6;
-      }
-      .feature-announce-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 11px;
-        background: #1b1b1b;
-        border: 1px solid #333;
-        padding: 11px 13px;
-      }
-      .feature-announce-row > i {
-        width: 20px;
-        margin-top: 2px;
-        font-size: 16px;
-        text-align: center;
-      }
-      .feature-announce-row.f-filter {
-        border-left: 3px solid #4ade80;
-      }
-      .feature-announce-row.f-filter > i {
-        color: #4ade80;
-      }
-      .feature-announce-row.f-bots {
-        border-left: 3px solid #26c6da;
-      }
-      .feature-announce-row.f-bots > i {
-        color: #26c6da;
-      }
-      .feature-announce-row b {
-        display: block;
-        margin-bottom: 2px;
-        color: #fff;
-        font-size: 13.5px;
-      }
-      .feature-announce-row p {
-        margin: 0;
-        color: #c3c3c3;
-        font-size: 12.5px;
-        line-height: 1.55;
-      }
-      .feature-announce-note {
-        margin: 0;
-        color: #8d8d8d;
-        font-size: 12px;
-        line-height: 1.55;
-      }
-      .feature-announce-btn {
-        align-self: flex-end;
-        background: var(--tk-accent);
-        color: #000;
-        border: none;
-        border-radius: 0;
-        padding: 9px 22px;
-        font-size: 13px;
-        font-weight: bold;
-        font-family: inherit;
-        cursor: pointer;
-        transition: background 0.15s ease;
-      }
-      .feature-announce-btn:hover {
-        background: #ffa726;
       }
 
       .user-info button.staff-action-button i.fas {
@@ -518,14 +359,6 @@
             <i class="fas fa-volume-high" id="muteIcon"></i>
           </button>
           <button
-            id="filterToggle"
-            class="mute-toggle"
-            aria-label="Toggle Word Filter"
-            title="Word Filter: ON (click to disable)"
-          >
-            <i class="fas fa-shield-halved"></i>
-          </button>
-          <button
             id="layoutToggle"
             class="mute-toggle"
             aria-label="Switch layout"
@@ -533,14 +366,6 @@
             style="display: none"
           >
             <i class="fas fa-bars"></i>
-          </button>
-          <button
-            id="hideBotsToggle"
-            class="mute-toggle hide-bots-toggle"
-            aria-label="Hide bots"
-            title="Hide bots from your view"
-          >
-            <i class="fas fa-robot"></i>
           </button>
           <button
             id="appDirectoryToggle"
@@ -614,50 +439,6 @@
       </div>
     </div>
 
-    <!-- Feature announcement: the word filter and bots are personal toggles -->
-    <div id="featureAnnounce" class="feature-announce-overlay">
-      <div class="feature-announce-box">
-        <div class="feature-announce-head">
-          <i class="fas fa-shield-halved feature-announce-icon"></i>
-          <h2 class="feature-announce-title">Automod and bots are optional</h2>
-          <span class="feature-announce-tag">New</span>
-        </div>
-        <div class="feature-announce-body">
-          <p class="feature-announce-lead">
-            Two of the icons in the top bar are yours to switch. Click one to
-            turn it on or off whenever you like.
-          </p>
-          <div class="feature-announce-row f-filter">
-            <i class="fas fa-shield-halved"></i>
-            <div>
-              <b>Word filter</b>
-              <p>
-                Stars out offensive words for you. A green shield means it is
-                on; red with a slash means it is off.
-              </p>
-            </div>
-          </div>
-          <div class="feature-announce-row f-bots">
-            <i class="fas fa-robot"></i>
-            <div>
-              <b>Hide bots</b>
-              <p>
-                Takes bot users out of your view. Click the robot again to
-                bring them back.
-              </p>
-            </div>
-          </div>
-          <p class="feature-announce-note">
-            Both only change what <strong>you</strong> see. Other people in
-            the room are not affected.
-          </p>
-          <button class="feature-announce-btn" id="featureAnnounceClose">
-            Got it
-          </button>
-        </div>
-      </div>
-    </div>
-
     <audio id="joinSound" src="audio/ding.mp3"></audio>
     <audio id="leaveSound" src="audio/ding.mp3"></audio>
 
@@ -667,7 +448,6 @@
     <script src="js/notify.js?v=1.0.0"></script>
     <script src="js/staff-ui.js?v=1.11.0"></script>
     <script src="js/desk.js?v=1.1.0"></script>
-    <script src="js/word-filter-client.js?v=2.3.0"></script>
     <script src="js/identity.js?v=1.0.2"></script>
     <script src="js/connection-overlay.js?v=1.2.0"></script>
     <script src="js/room-client.js?v=3.31.0"></script>
@@ -678,7 +458,6 @@
 
     <!-- Feature announcement logic -->
     <script src="js/staff-guide-modal.js?v=1.1.0"></script>
-    <script src="js/feature-announce.js?v=1.1.0"></script>
     <!-- Developer notices. Loaded after room-client.js, which publishes the
          socket this reuses, so a notice posted now reaches people mid-chat. -->
     <script src="js/announce.js?v=1.2.0"></script>

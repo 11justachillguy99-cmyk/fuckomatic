@@ -5,8 +5,6 @@
 // ── 1. CONSTANTS & STATE ────────────────────────────────────────────────────
 
 const socket = io({
-  transports: ["websocket"],
-  upgrade: false,
   auth: {
     devKey: localStorage.getItem("fuckomatic_devKey") || undefined,
     modKey: localStorage.getItem("fuckomatic_modKey") || undefined,
@@ -73,8 +71,6 @@ let isSpectating = false;
 const isStaff = () => currentUserIsDev || currentUserIsMod;
 
 let selfRawText = "";
-let selfIsFiltered = false;
-let selfDisplay = "";
 
 const mutedUsers = new Set();
 const afkUsers = new Set();
@@ -102,109 +98,12 @@ const ERROR_CODES = {
   AFK_TIMEOUT: "AFK Timeout",
 };
 
-// ── 2. WORD FILTER ──────────────────────────────────────────────────────────
-
-let clientWordFilter = null;
-let wordFilterEnabled = true;
-
-function hasEmote(code) {
-  return Object.prototype.hasOwnProperty.call(emoteList, code);
-}
-
-// Offensive spans trimmed to the letters: the matcher works on a normalized
-// copy and can hand back a span that drags a space or a neighbour along.
-function offensiveSpans(text) {
-  return clientWordFilter
-    .checkText(text)
-    .offensiveRanges.map(([s, e]) => {
-      while (s < e && /\s/.test(text[s])) s++;
-      while (e > s && /\s/.test(text[e - 1])) e--;
-      return [s, e];
-    })
-    .filter(([s, e]) => e > s);
-}
-
-function maskSpans(text, spans) {
-  let out = text;
-  for (const [s, e] of spans)
-    out = out.slice(0, s) + "*".repeat(e - s) + out.slice(e);
-  return out;
-}
-
-function filterTextPreservingEmotes(text) {
-  const mask = (seg) => maskSpans(seg, offensiveSpans(seg));
-  if (!text.includes(":") && !text.includes(";")) return mask(text);
-
-  const regex = /(:([A-Za-z0-9_.-]+):|;([A-Za-z0-9_.-]+);)/g;
-  let result = "";
-  let lastIndex = 0;
-  let foundEmote = false;
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    const code = match[2] || match[3];
-    if (!code || !hasEmote(code)) continue;
-    foundEmote = true;
-    result += mask(text.slice(lastIndex, match.index));
-    result += match[0];
-    lastIndex = match.index + match[0].length;
-  }
-  if (!foundEmote) return mask(text);
-  result += mask(text.slice(lastIndex));
-  return result;
-}
-
-function applyWordFilter(text) {
-  if (!wordFilterEnabled || !clientWordFilter || !clientWordFilter.ready) {
-    return text;
-  }
-  return filterTextPreservingEmotes(text);
-}
-
-const filterWatchers = new Set();
+// Keep game chat consumers compatible; filtering is disabled everywhere.
 window.FuckomaticFilter = {
-  enabled: () => wordFilterEnabled,
-  apply: (text) => applyWordFilter(String(text == null ? "" : text)),
-  onChange(fn) {
-    if (typeof fn === "function") filterWatchers.add(fn);
-    return () => filterWatchers.delete(fn);
-  },
+  enabled: () => false,
+  apply: (text) => String(text == null ? "" : text),
+  onChange: () => () => {},
 };
-function notifyFilterWatchers() {
-  for (const fn of filterWatchers) {
-    try {
-      fn(wordFilterEnabled);
-    } catch (_) {
-    }
-  }
-}
-
-function toggleWordFilter() {
-  wordFilterEnabled = !wordFilterEnabled;
-  localStorage.setItem("wordFilterEnabled", JSON.stringify(wordFilterEnabled));
-  updateFilterToggleUI();
-
-  if (chatInput && selfRawText) {
-    const cursor = getCursorPosition(chatInput);
-    renderSelfBox(maskSelf(selfRawText), cursor);
-  }
-
-  document.querySelectorAll(".chat-row").forEach((row) => {
-    if (row.dataset.userId === currentUserId) return;
-    const chatDiv = row.querySelector(".chat-input");
-    if (!chatDiv || chatDiv.dataset.rawText === undefined) return;
-    renderOtherUserMessage(chatDiv, chatDiv.dataset.rawText);
-  });
-  notifyFilterWatchers();
-}
-
-function updateFilterToggleUI() {
-  const btn = document.getElementById("filterToggle");
-  if (!btn) return;
-  btn.classList.toggle("filter-off", !wordFilterEnabled);
-  btn.title = wordFilterEnabled
-    ? "Word Filter: ON (click to disable)"
-    : "Word Filter: OFF (click to enable)";
-}
 
 // ── 3. MODAL SYSTEM ─────────────────────────────────────────────────────────
 
@@ -1269,24 +1168,14 @@ function insertEmote(emoteCode, emoteInfo, options = {}) {
 
 function renderChatInputFromRaw() {
   if (!chatInput) return;
-  renderSelfBox(maskSelf(selfRawText));
+  renderSelfBox(selfRawText);
   placeCursorAtEnd(chatInput);
-}
-
-// The filter on your own box: a word is starred the moment it matches, as it
-// is typed. Star runs keep the word's length, so a position in the box is
-// the same position in the raw text.
-function maskSelf(raw) {
-  if (!wordFilterEnabled || !clientWordFilter?.ready || !raw) return raw;
-  return filterTextPreservingEmotes(raw);
 }
 
 function renderSelfBox(display, cursor) {
   chatInput.innerHTML = "";
   chatInput.textContent = display;
   if (/[;:]/.test(display)) replaceEmotes(chatInput);
-  selfDisplay = display;
-  selfIsFiltered = wordFilterEnabled && !!clientWordFilter?.ready;
   if (cursor == null || cursor < 0) return;
   try {
     setCursorPosition(chatInput, Math.min(cursor, display.length));
@@ -1298,16 +1187,7 @@ function renderSelfBox(display, cursor) {
 function updateSentMessage() {
   if (!chatInput) return;
   try {
-    const currentDisplay = getPlainText(chatInput);
-
-    if (selfIsFiltered && wordFilterEnabled && clientWordFilter?.ready)
-      selfRawText = reconstructRawText(
-        selfDisplay,
-        currentDisplay,
-        selfRawText,
-        getCursorPosition(chatInput),
-      );
-    else selfRawText = currentDisplay;
+    selfRawText = getPlainText(chatInput);
 
     const diff = getDiff(lastSentMessage, selfRawText);
     if (diff) {
@@ -1315,76 +1195,10 @@ function updateSentMessage() {
       lastSentMessage = selfRawText;
     }
 
-    applySelfFilter();
   } catch (err) {
     console.error("updateSentMessage error:", err);
   }
 }
-
-function reconstructRawText(prevFiltered, currentDisplay, prevRaw, caret) {
-  if (prevFiltered === currentDisplay) return prevRaw;
-
-  // A plain insert ends at the caret and a plain delete starts there. Both
-  // are exact, which a text diff cannot be once the change sits inside a run
-  // of stars that all look the same.
-  const delta = currentDisplay.length - prevFiltered.length;
-  if (caret != null && prevFiltered.length === prevRaw.length) {
-    if (delta > 0) {
-      const at = caret - delta;
-      if (
-        at >= 0 &&
-        prevFiltered.slice(0, at) === currentDisplay.slice(0, at) &&
-        prevFiltered.slice(at) === currentDisplay.slice(caret)
-      )
-        return prevRaw.slice(0, at) + currentDisplay.slice(at, caret) + prevRaw.slice(at);
-    } else if (
-      delta < 0 &&
-      prevFiltered.slice(0, caret) === currentDisplay.slice(0, caret) &&
-      prevFiltered.slice(caret - delta) === currentDisplay.slice(caret)
-    )
-      return prevRaw.slice(0, caret) + prevRaw.slice(caret - delta);
-  }
-
-  let start = 0;
-  while (
-    start < prevFiltered.length &&
-    start < currentDisplay.length &&
-    prevFiltered[start] === currentDisplay[start]
-  ) {
-    start++;
-  }
-
-  let prevEnd = prevFiltered.length - 1;
-  let curEnd = currentDisplay.length - 1;
-  while (
-    prevEnd > start &&
-    curEnd > start &&
-    prevFiltered[prevEnd] === currentDisplay[curEnd]
-  ) {
-    prevEnd--;
-    curEnd--;
-  }
-
-  const inserted = currentDisplay.slice(start, curEnd + 1);
-  return prevRaw.slice(0, start) + inserted + prevRaw.slice(prevEnd + 1);
-}
-
-function applySelfFilter() {
-  if (!chatInput) return;
-  if (!(wordFilterEnabled && clientWordFilter?.ready)) {
-    selfIsFiltered = false;
-    selfDisplay = selfRawText;
-    return;
-  }
-  const display = maskSelf(selfRawText);
-  if (display !== getPlainText(chatInput))
-    renderSelfBox(display, getCursorPosition(chatInput));
-  else {
-    selfDisplay = display;
-    selfIsFiltered = true;
-  }
-}
-
 
 const EMOTE_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
@@ -1889,7 +1703,7 @@ document.addEventListener("click", (e) => {
 function renderOtherUserMessage(element, rawMessage) {
   if (!element) return;
   element.dataset.rawText = rawMessage;
-  const display = applyWordFilter(rawMessage);
+  const display = rawMessage;
   // Same picture as before: leave the box alone, so emotes do not blink.
   if (element.dataset.display === display) return;
   element.dataset.display = display;
@@ -1909,7 +1723,7 @@ function updateCurrentMessages(messages) {
       selfRawText = text;
       lastSentMessage = text;
       const cursor = document.activeElement === chatDiv ? getCursorPosition(chatDiv) : null;
-      renderSelfBox(maskSelf(text), cursor);
+      renderSelfBox(text, cursor);
     } else {
       renderOtherUserMessage(chatDiv, text);
     }
@@ -1954,7 +1768,7 @@ function displayChatMessage(data) {
     selfRawText = newText;
     lastSentMessage = newText;
     const cursor = document.activeElement === chatDiv ? getCursorPosition(chatDiv) : null;
-    renderSelfBox(maskSelf(newText), cursor);
+    renderSelfBox(newText, cursor);
   } else {
     renderOtherUserMessage(chatDiv, newText);
   }
@@ -2879,10 +2693,7 @@ function getAvailableViewportHeight() {
 function adjustLayout() {
   injectStyles();
   const container = document.querySelector(".chat-container");
-  const hidingBots = document.body.classList.contains("tk-hide-bots");
-  const rows = [...document.querySelectorAll(".chat-row")].filter(
-    (row) => !(hidingBots && row.classList.contains("bot-user")),
-  );
+  const rows = [...document.querySelectorAll(".chat-row")];
   if (!container || rows.length === 0) return;
 
   const activeEl = document.activeElement;
@@ -3442,7 +3253,7 @@ socket.on("room update", (roomData) => {
         return;
       }
       selfRawText = rawVal;
-      renderSelfBox(maskSelf(rawVal));
+      renderSelfBox(rawVal);
     } else if (ci.dataset.rawText !== rawVal) {
       renderOtherUserMessage(ci, rawVal);
     }
@@ -3618,15 +3429,7 @@ function readAndScrubUrlParams() {
 }
 
 async function initRoom() {
-  const filter = new ClientWordFilter();
   loadEmotes();
-  await filter.init();
-  if (filter.ready) clientWordFilter = filter;
-  else console.warn("[WordFilter] Not available.");
-
-  const saved = localStorage.getItem("wordFilterEnabled");
-  wordFilterEnabled = saved !== "false";
-  updateFilterToggleUI();
 
   const { roomId, accessCode } = readAndScrubUrlParams();
   const spectate =
@@ -3688,30 +3491,6 @@ window.addEventListener("load", () => {
     updateMuteIcon();
   }
   muteToggleButton.addEventListener("click", toggleMute);
-
-  const filterBtn = document.getElementById("filterToggle");
-  if (filterBtn) filterBtn.addEventListener("click", toggleWordFilter);
-
-  const hideBotsBtn = document.getElementById("hideBotsToggle");
-  if (hideBotsBtn) {
-    const paintHideBots = () => {
-      const off = localStorage.getItem("tkHideBots") === "1";
-      document.body.classList.toggle("tk-hide-bots", off);
-      hideBotsBtn.classList.toggle("off", off);
-      hideBotsBtn.title = off
-        ? "Bots are hidden from your view (click to show)"
-        : "Hide bots from your view";
-    };
-    paintHideBots();
-    hideBotsBtn.addEventListener("click", () => {
-      const off = localStorage.getItem("tkHideBots") === "1";
-      try {
-        localStorage.setItem("tkHideBots", off ? "0" : "1");
-      } catch (e) {}
-      paintHideBots();
-      adjustLayout();
-    });
-  }
 
   const layoutBtn = document.getElementById("layoutToggle");
   if (layoutBtn) layoutBtn.addEventListener("click", toggleRoomLayout);
@@ -4577,7 +4356,7 @@ function openStaffPanel() {
         {
           icon: '<i class="fas fa-flag"></i>',
           label: "Feature flags...",
-          desc: "Word filter / room creation / limit",
+          desc: "Room creation and room limit",
           onClick: () => socket.emit("dev get flags"),
         },
         {
@@ -4662,15 +4441,6 @@ socket.on("dev flags", (flags) => {
     groups: [
       {
         items: [
-          {
-            icon: flags.wordFilter
-              ? '<i class="fas fa-circle-check"></i>'
-              : '<i class="fas fa-ban"></i>',
-            label: `Word filter (global): ${flags.wordFilter ? "ON" : "OFF"}`,
-            desc: "Toggle the global word filter",
-            onClick: () =>
-              socket.emit("dev set flags", { wordFilter: !flags.wordFilter }),
-          },
           {
             icon: flags.roomCreation
               ? '<i class="fas fa-circle-check"></i>'
@@ -5216,11 +4986,6 @@ window.addEventListener("hashchange", () => {
     .mod-badge.mod-badge-lead{background:#77dd77;color:#00220f;}
     .bot-badge{display:inline-block;background:var(--bot-flair,#9aa3ae);color:#16191d;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:8px;margin:0 5px 0 0;letter-spacing:.5px;vertical-align:middle;flex:0 0 auto;}
     .bot-user .chat-input{border-left:2px solid rgba(154,163,174,.4);}
-    body.tk-hide-bots .bot-user{display:none !important;}
-    .hide-bots-toggle{position:relative;color:#26c6da;}
-    .hide-bots-toggle i{color:#26c6da;font-size:16px;}
-    .hide-bots-toggle.off i{opacity:.55;}
-    .hide-bots-toggle.off::after{content:"";position:absolute;left:5px;right:5px;top:50%;height:2px;background:currentColor;transform:rotate(-38deg);border-radius:2px;pointer-events:none;}
     .device-icon{color:#7f8794;font-size:11px;margin-right:6px;flex:0 0 auto;}
     .staff-action-button{background:none;border:none;cursor:pointer;font-size:13px;margin-left:4px;opacity:.75;}
     .staff-action-button:hover{opacity:1;}

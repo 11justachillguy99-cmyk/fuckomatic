@@ -370,11 +370,8 @@ const io = socketIo(server, {
   pingInterval: 25000,
   connectTimeout: 45000,
   maxHttpBufferSize: 2e6,
-  // WebSocket only. The polling fallback doubled the handshake and made every
-  // client start on long-poll before upgrading; anything that cannot open a
-  // WebSocket to us is not going to work well anyway.
-  transports: ["websocket"],
-  allowUpgrades: false,
+  transports: ["polling", "websocket"],
+  allowUpgrades: true,
   // Off, which is also what engine.io itself defaults to. It never did much
   // here - a chat line or a game frame is well under the threshold and went
   // out uncompressed anyway - but it is not free just because it rarely fires.
@@ -821,7 +818,6 @@ setInterval(() => {
 app.locals.buildId = () => BUILD_ID;
 const PAGES = [
   "about",
-  "botcreator",
   "contributors",
   "desk",
   "index",
@@ -1596,8 +1592,7 @@ app.post(`${API}/rooms`, apiAuth, async (req, res) => {
 
 // ── Community themes: browse and publish visual-editor themes ──────────────
 // Submissions carry only validated tokens/effects/fonts (custom CSS is
-// rejected by design) and the title/description ALWAYS pass the word filter,
-// independent of the global automod toggle.
+// rejected by design) and receive standard input sanitization.
 
 app.get(`${API}/themes`, (req, res) => {
   res.json({ themes: communityThemes.publicList() });

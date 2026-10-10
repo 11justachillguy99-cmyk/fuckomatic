@@ -5,7 +5,6 @@ const path = require("path");
 const fs = require("fs").promises;
 const crypto = require("crypto");
 const util = require("util");
-const WordFilter = require("../public/js/word-filter.js");
 const nameguard = require("./nameguard");
 const cloudflare = require("./cloudflare");
 
@@ -62,7 +61,7 @@ const CONFIG = {
     PRESSURE_CLEANUP_INTERVAL: 30000,
   },
   FEATURES: {
-    ENABLE_WORD_FILTER: true,
+    ENABLE_WORD_FILTER: false,
     LOAD_ROOMS_ON_STARTUP: true,
     ENABLE_BOT_PROTECTION: true,
     ENABLE_DYNAMIC_SCALING: true,
@@ -119,22 +118,10 @@ const ERROR_CODES = {
   AUTOMATED_ACCESS_BLOCKED: "AUTOMATED_ACCESS_BLOCKED",
 };
 
-// ── Word Filter ─────────────────────────────────────────────────────────────
-
-let wordFilter;
-try {
-  wordFilter = new WordFilter(
-    path.join(__dirname, "..", "public", "js", "offensive_words.json"),
-    path.join(__dirname, "..", "public", "js", "character_substitutions.json"),
-  );
-} catch (err) {
-  console.error("Failed to initialize WordFilter:", err);
-  wordFilter = {
-    checkText: () => ({ hasOffensiveWord: false }),
-    filterText: (text) => text,
-  };
-  CONFIG.FEATURES.ENABLE_WORD_FILTER = false;
-}
+const wordFilter = {
+  checkText: () => ({ hasOffensiveWord: false, offensiveRanges: [] }),
+  filterText: (text) => text,
+};
 
 // ── Shared Mutable State ────────────────────────────────────────────────────
 

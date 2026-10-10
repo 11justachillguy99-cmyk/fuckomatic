@@ -380,8 +380,6 @@ function updateConnectionStatus() {
 // ============================================================================
 
 const socket = io({
-  transports: ["websocket"],
-  upgrade: false,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
@@ -2490,7 +2488,7 @@ function openDevPanel() {
           {
             icon: '<i class="fas fa-flag"></i>',
             label: "Feature flags…",
-            desc: "Word filter / room creation / limit",
+            desc: "Room creation and room limit",
             onClick: () => socket.emit("dev get flags"),
           },
           {
@@ -3019,15 +3017,6 @@ socket.on("dev flags", (flags) => {
     groups: [
       {
         items: [
-          {
-            icon: flags.wordFilter
-              ? '<i class="fas fa-circle-check"></i>'
-              : '<i class="fas fa-ban"></i>',
-            label: `Word filter (global): ${flags.wordFilter ? "ON" : "OFF"}`,
-            desc: "Toggle the global word filter",
-            onClick: () =>
-              socket.emit("dev set flags", { wordFilter: !flags.wordFilter }),
-          },
           {
             icon: flags.roomCreation
               ? '<i class="fas fa-circle-check"></i>'

@@ -3892,15 +3892,6 @@ function joinRoom(socket, roomId, userId) {
         ),
       );
 
-    if (socket.isBot && bots.botCountInRoom(room) >= bots.maxBotsForRoom(room))
-      return socket.emit(
-        "error",
-        createErrorResponse(
-          ERROR_CODES.FORBIDDEN,
-          `This room is at its bot limit (${bots.maxBotsForRoom(room)} for its size).`,
-        ),
-      );
-
     clearAFKTimers(userId);
     room.users = room.users.filter((u) => u.id !== userId);
     socket.join(roomId);
@@ -4843,7 +4834,7 @@ function registerSocketHandlers(opts) {
     // ── The Desk: staff chat, pings, presence, inspector ────────────────
     staffchat.register(socket, safe);
 
-    // ── Bot Creator: saved bots, deploys, staff bot controls ────────────
+    // ── Bot runtime: saved bots, deploys, staff bot controls ────────────
     bots.register(socket, safe);
 
     // ── Talkoboard: stroke lifecycle + state sync ───────────────────────
@@ -7902,7 +7893,6 @@ function registerSocketHandlers(opts) {
       safe(async () => {
         if (!requireDev(socket)) return;
         socket.emit("dev flags", {
-          wordFilter: CONFIG.FEATURES.ENABLE_WORD_FILTER,
           roomCreation: CONFIG.FEATURES.ENABLE_ROOM_CREATION,
           baseMaxRooms: CONFIG.LIMITS.BASE_MAX_ROOMS,
           maxRoomCapacity: CONFIG.LIMITS.MAX_ROOM_CAPACITY,
@@ -7968,8 +7958,6 @@ function registerSocketHandlers(opts) {
       "dev set flags",
       safe(async (data) => {
         if (!requireDev(socket)) return;
-        if (typeof data?.wordFilter === "boolean")
-          CONFIG.FEATURES.ENABLE_WORD_FILTER = data.wordFilter;
         if (typeof data?.roomCreation === "boolean")
           CONFIG.FEATURES.ENABLE_ROOM_CREATION = data.roomCreation;
         if (
@@ -7990,7 +7978,6 @@ function registerSocketHandlers(opts) {
         state.apiCache.delete("config");
         state.apiCache.delete("public_rooms");
         const flags = {
-          wordFilter: CONFIG.FEATURES.ENABLE_WORD_FILTER,
           roomCreation: CONFIG.FEATURES.ENABLE_ROOM_CREATION,
           baseMaxRooms: CONFIG.LIMITS.BASE_MAX_ROOMS,
           maxRoomCapacity: CONFIG.LIMITS.MAX_ROOM_CAPACITY,

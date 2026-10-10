@@ -30,12 +30,6 @@
       title: "Things to do",
       items: [
         {
-          icon: "fa-robot",
-          tag: "new",
-          title: "Bot Creator",
-          text: "Build a bot out of rules without writing code, then send it into a room. Share it with friends and they can edit and send it too.",
-        },
-        {
           icon: "fa-dice",
           tag: "new",
           title: "Games in rooms",

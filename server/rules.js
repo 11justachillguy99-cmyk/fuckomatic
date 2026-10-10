@@ -99,10 +99,10 @@ const DEFAULT_COMMUNITY = [
     block: "permanent",
   },
   {
-    title: "The word filter is your setting, not the rule",
+    title: "Swearing alone is not a rule violation",
     body:
-      "Fuckomatic filters language automatically, and you can switch that off for yourself. Turning it off does not mean anything goes, and leaving it on does not make abuse acceptable. Swearing on its own is not a punishable offence here. Spelling a slur or a threat so the filter misses it is still the slur or the threat, and pasting filtered words over and over to get past people who keep the filter on is spam.",
-    why: "The filter decides what you are comfortable reading. These rules decide how you may treat people. They are separate questions.",
+      "Swearing on its own is allowed. Slurs, threats, harassment, and flooding are still handled under the rules against those behaviors.",
+    why: "The focus is on how people treat one another, not ordinary profanity.",
     response: "Nothing on its own. Swearing is not punished. Slurs, threats and floods are handled under rules 3, 4 and 9.",
     block: "none",
   },

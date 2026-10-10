@@ -28,10 +28,6 @@ const STORE_PATH = path.join(DATA_DIR, "bots.json");
 // ── Limits (the whole abuse posture in one place) ───────────────────────────
 
 const LIMITS = {
-  MAX_BOTS_PER_ROOM: 5,
-  MAX_SAVED: 20,
-  MAX_DEPLOYED_PER_OWNER: 1,
-  MAX_ACTIVE_TOTAL: 20,
   MAX_RULES: 200,
   MAX_ACTIONS_PER_RULE: 20,
   MAX_CONDITIONS_PER_RULE: 10,
@@ -489,15 +485,6 @@ let tickCount = 0;
 
 function io() {
   return state.io;
-}
-
-function botCountInRoom(room) {
-  return (room?.users || []).filter((u) => u.isBotUser).length;
-}
-
-function maxBotsForRoom(room) {
-  const cap = deps && deps.roomCapacity ? deps.roomCapacity(room) : 5;
-  return Math.max(1, Math.min(LIMITS.MAX_BOTS_PER_ROOM, Math.floor(cap / 5)));
 }
 
 function humanCount(room) {
@@ -1305,8 +1292,6 @@ function ownerStatus(ownerKey) {
   return {
     enabled: store.enabled,
     limits: {
-      maxSaved: LIMITS.MAX_SAVED,
-      maxPerRoom: LIMITS.MAX_BOTS_PER_ROOM,
       maxRules: LIMITS.MAX_RULES,
       maxActions: LIMITS.MAX_ACTIONS_PER_RULE,
       maxConditions: LIMITS.MAX_CONDITIONS_PER_RULE,
@@ -1380,7 +1365,7 @@ function requireSignin(socket) {
     "error",
     createErrorResponse(
       ERROR_CODES.UNAUTHORIZED,
-      "Sign in at the lobby first, then come back to the Bot Creator.",
+      "Sign in at the lobby first, then return to the bot controls.",
     ),
   );
   return false;
@@ -1411,8 +1396,6 @@ function register(socket, safe) {
       const found = data?.id ? findBotFor(ownerKey, data.id) : null;
       const rec = found ? found.rec : ownerRecord(ownerKey, true);
       const existing = found ? found.bot : null;
-      if (!existing && rec.bots.length >= LIMITS.MAX_SAVED)
-        return fail(socket, `You can keep ${LIMITS.MAX_SAVED} bots. Delete one first.`);
       const v = validateConfig(data?.bot, existing?.id);
       if (!v.ok) return fail(socket, v.error);
       const who = actorName(socket);
@@ -1494,23 +1477,6 @@ function register(socket, safe) {
         return fail(socket, "Bots are turned off by staff right now.", "bots_off");
       if (state.maintenance)
         return fail(socket, "Fuckomatic is in maintenance mode. Try again shortly.", "maintenance");
-      if (active.size >= LIMITS.MAX_ACTIVE_TOTAL)
-        return fail(socket, "Too many bots are running right now. Try again in a while.", "busy");
-      const mine = activeBotOfActor(ownerKey);
-      if (mine)
-        return fail(
-          socket,
-          `You already have "${mine.name}" running. Stop it first.`,
-          "already_running",
-        );
-      const out = activeBotOfOwner(homeKey);
-      if (out)
-        return fail(
-          socket,
-          `"${out.name}" is already out in a room.`,
-          "bot_out",
-        );
-
       let room = null;
       if (data?.roomId) {
         room = state.rooms.get(String(data.roomId));
@@ -1534,13 +1500,6 @@ function register(socket, safe) {
             socket,
             "That room is empty. Bots need someone to talk to.",
             "room_empty",
-          );
-        const maxBots = maxBotsForRoom(room);
-        if (botCountInRoom(room) >= maxBots)
-          return fail(
-            socket,
-            `That room is at its bot limit (${maxBots} for its size).`,
-            "room_bots_full",
           );
         const seats = (room.users || []).filter(
           (u) => !(u.isDev && u.isVanished),
@@ -1769,8 +1728,6 @@ function register(socket, safe) {
         if (rt.bot.id === bot.id && rt.ownerKey === ownerKey)
           return fail(socket, "Stop the bot before transferring it.");
       const targetRec = ownerRecord(target.did, true);
-      if (targetRec.bots.length >= LIMITS.MAX_SAVED)
-        return fail(socket, "They already keep the maximum number of bots.");
       rec.bots = rec.bots.filter((b) => b !== bot);
       targetRec.bots.push(bot);
       const oldOwner = actorName(socket);
@@ -2102,8 +2059,6 @@ function onOwnerJoined(socket, room) {
   const bot = rec?.bots.find((b) => b.id === pend.botId);
   if (!bot) return;
   if (room.allowBots === false) return;
-  if (activeBotOfOwner(pend.ownerKey) || activeBotOfActor(ownerKeyOf(socket))) return;
-  if (botCountInRoom(room) >= maxBotsForRoom(room)) return;
   const seats = (room.users || []).filter((u) => !(u.isDev && u.isVanished)).length;
   if (seats >= deps.roomCapacity(room)) return;
   const rt = deploy(socket, bot, room, pend.ownerKey);
@@ -2145,6 +2100,4 @@ module.exports = {
   noteEvicted,
   evictOwner,
   isActiveBot,
-  botCountInRoom,
-  maxBotsForRoom,
 };
