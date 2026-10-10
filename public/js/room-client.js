@@ -72,10 +72,8 @@ const isStaff = () => currentUserIsDev || currentUserIsMod;
 
 let selfRawText = "";
 
-const mutedUsers = new Set();
 const afkUsers = new Set();
 const devContext = new Map();
-const storedMessagesForMutedUsers = new Map();
 
 const MAX_MESSAGE_LENGTH = 5000;
 
@@ -1667,23 +1665,6 @@ function adjustVoteButtonVisibility() {
   });
 }
 
-function adjustMuteButtonVisibility() {
-  document.querySelectorAll(".chat-row").forEach((row) => {
-    const uid = row.dataset.userId;
-    const btn = row.querySelector(".mute-button");
-    if (btn && uid !== currentUserId) {
-      btn.style.display = "inline-block";
-      if (mutedUsers.has(uid)) {
-        btn.innerHTML = "\uD83D\uDD07";
-        btn.classList.add("muted");
-        row.classList.add("user-muted");
-        const ci = row.querySelector(".chat-input");
-        if (ci) ci.style.opacity = "0.3";
-      }
-    }
-  });
-}
-
 // Only one tool tray open at a time; clicking anywhere else closes it.
 function closeToolTrays(except) {
   document.querySelectorAll(".user-info.tools-open").forEach((ui) => {
@@ -1731,12 +1712,6 @@ function updateCurrentMessages(messages) {
 }
 
 function displayChatMessage(data) {
-  if (mutedUsers.has(data.userId)) {
-    if (!storedMessagesForMutedUsers.has(data.userId))
-      storedMessagesForMutedUsers.set(data.userId, []);
-    storedMessagesForMutedUsers.get(data.userId).push(data);
-    return;
-  }
   const chatDiv = document.querySelector(
     `.chat-row[data-user-id="${data.userId}"] .chat-input`,
   );
@@ -2273,33 +2248,6 @@ function createUserRow(user, container) {
   nameEl.textContent = userLabel(user);
   info.appendChild(nameEl);
 
-  const muteBtn = document.createElement("button");
-  muteBtn.className = "mute-button";
-  muteBtn.innerHTML = "\uD83D\uDD0A";
-  muteBtn.style.display = "none";
-  muteBtn.addEventListener("click", () => {
-    if (mutedUsers.has(user.id)) {
-      mutedUsers.delete(user.id);
-      muteBtn.innerHTML = "\uD83D\uDD0A";
-      muteBtn.classList.remove("muted");
-      row.classList.remove("user-muted");
-      const ci = row.querySelector(".chat-input");
-      if (ci) ci.style.opacity = "1";
-      const queued = storedMessagesForMutedUsers.get(user.id);
-      if (queued?.length) {
-        queued.forEach(displayChatMessage);
-        storedMessagesForMutedUsers.delete(user.id);
-      }
-    } else {
-      mutedUsers.add(user.id);
-      muteBtn.innerHTML = "\uD83D\uDD07";
-      muteBtn.classList.add("muted");
-      row.classList.add("user-muted");
-      const ci = row.querySelector(".chat-input");
-      if (ci) ci.style.opacity = "0.3";
-    }
-  });
-
   const voteBtn = document.createElement("button");
   voteBtn.className = "vote-button";
   voteBtn.innerHTML = "\uD83D\uDC4E 0";
@@ -2314,7 +2262,6 @@ function createUserRow(user, container) {
   // bar itself stays name + dislike.
   const tools = document.createElement("span");
   tools.className = "ui-tools";
-  if (user.id !== currentUserId) tools.appendChild(muteBtn);
 
   const targetVisibleRole =
     user.isDev && !user.isHidden
@@ -2386,7 +2333,7 @@ function createUserRow(user, container) {
 
     if (user.id !== currentUserId && (currentUserIsDev || targetVisibleRole !== "dev")) {
       nameEl.classList.add("ui-name-file");
-      nameEl.title = "History: names, blocks, warnings, appeals, reports";
+      nameEl.title = "History: names, blocks, warnings, appeals";
       nameEl.setAttribute("role", "button");
       nameEl.tabIndex = 0;
       nameEl.addEventListener("click", (e) => {
@@ -2401,15 +2348,6 @@ function createUserRow(user, container) {
       });
     }
   }
-  if (user.id !== currentUserId) {
-    const reportBtn = document.createElement("button");
-    reportBtn.className = "report-button";
-    reportBtn.innerHTML = '<i class="fas fa-flag"></i>';
-    reportBtn.title = "Report to staff";
-    reportBtn.addEventListener("click", () => openReportPrompt(user));
-    tools.appendChild(reportBtn);
-  }
-
   info.appendChild(tools);
   info.appendChild(voteBtn);
 
@@ -2486,7 +2424,7 @@ function createUserRow(user, container) {
         window._tkPingHintAt = Date.now();
         if (window.toastr)
           toastr.info(
-            "Typing @mod does not reach staff. To report someone, use the Report option on their name.",
+            "Typing @mod does not contact staff.",
           );
       }
       updateSentMessage();
@@ -2549,7 +2487,6 @@ function createUserRow(user, container) {
   }
   container.appendChild(row);
   adjustVoteButtonVisibility();
-  adjustMuteButtonVisibility();
   return row;
 }
 
@@ -2585,7 +2522,6 @@ function updateRoomUI(roomData) {
   while (container.firstChild) container.removeChild(container.firstChild);
   container.appendChild(frag);
   adjustVoteButtonVisibility();
-  adjustMuteButtonVisibility();
   adjustLayout();
   if (chatInput)
     setTimeout(() => {
@@ -3291,7 +3227,7 @@ socket.on("access code required", () => {
 });
 
 socket.on("afk timeout", (data) => {
-  showInfoModal(data.message ?? "Removed from room due to inactivity.", () => {
+  showInfoModal(data.message ?? "You were removed from this room.", () => {
     window.location.href = data.redirectTo ?? "/";
   });
 });
@@ -3634,64 +3570,6 @@ function makeStaffConcealedMarker(user) {
   return span;
 }
 
-async function openReportPrompt(user) {
-  const name = user.username || "user";
-  socket.emit("user report begin", { targetUserId: user.id });
-  const cats = [
-    { value: "spam", label: "Spam or flooding" },
-    { value: "harassment", label: "Harassment or bullying" },
-    { value: "hate", label: "Hate speech or slurs" },
-    { value: "nsfw", label: "NSFW or inappropriate content" },
-    { value: "impersonation", label: "Impersonation" },
-    { value: "threats", label: "Threats or violence" },
-    { value: "modabuse", label: "Moderator abuse" },
-    { value: "other", label: "Other" },
-  ];
-  if (!window.StaffUI) {
-    const reason = window.prompt(
-      "Report " + name + " to staff. What is wrong?",
-    );
-    if (reason != null)
-      socket.emit("user report", {
-        targetUserId: user.id,
-        category: "other",
-        reason: reason,
-      });
-    return;
-  }
-  const fields = [
-    {
-      name: "category",
-      label: "What is wrong?",
-      type: "select",
-      value: "spam",
-      options: cats,
-    },
-  ];
-  const ruleField = await StaffUI.communityRuleField();
-  if (ruleField) fields.push(ruleField);
-  fields.push({
-    name: "reason",
-    label: "Details (optional)",
-    type: "textarea",
-    maxLength: 300,
-    placeholder: "Anything that helps staff understand.",
-  });
-  const r = await StaffUI.prompt({
-    title: "Report " + name,
-    icon: '<i class="fas fa-flag"></i>',
-    subtitle: "Sent privately to the moderators",
-    fields,
-    confirmText: "Send report",
-  });
-  if (r)
-    socket.emit("user report", {
-      targetUserId: user.id,
-      category: r.category,
-      reason: StaffUI.ruleReason(r.rule, r.reason),
-    });
-}
-
 async function openUserNoteDialog(user, { viewOnly = true } = {}) {
   const name = user.username || "user";
   const currentNote = typeof user.note === "string" ? user.note : "";
@@ -3765,7 +3643,7 @@ function openUserStaffMenu(user) {
   look.push({
       icon: '<i class="fas fa-clock-rotate-left"></i>',
       label: "History",
-      desc: "Blocks, warnings, appeals and reports on this person, in order",
+      desc: "Blocks, warnings and appeals on this person, in order",
       onClick: () => {
         const row = document.querySelector(
           `.chat-row[data-user-id="${user.id}"] .ui-name`,
@@ -4602,7 +4480,6 @@ function renderSpectate(data, noteText) {
     c.innerHTML = "";
     c.appendChild(frag);
     adjustVoteButtonVisibility();
-    adjustMuteButtonVisibility();
   }
   adjustLayout();
   if (data.currentMessages) updateCurrentMessages(data.currentMessages);
@@ -4708,18 +4585,6 @@ socket.on("spectate join result", (data) => {
       if (!confirmed) window.location.href = "/index.html";
     },
   });
-});
-
-socket.on("afk spectate", (data) => {
-  selfTabAfk = false;
-  if (afkHiddenTimer) {
-    clearTimeout(afkHiddenTimer);
-    afkHiddenTimer = null;
-  }
-  renderSpectate(
-    data,
-    "You were moved to spectating after 15 minutes away. Join back anytime.",
-  );
 });
 
 socket.on("spectate joined", (data) => renderSpectate(data));
@@ -4949,9 +4814,6 @@ socket.on("staff level changed", (d) => {
 socket.on("identity status", (d) => {
   if (window.FuckomaticIdentity) window.FuckomaticIdentity.activity = d || null;
 });
-socket.on("report received", () =>
-  notify("Thanks - your report was sent to the moderators.", "success"),
-);
 socket.on("staff notice", (d) => {
   if (d && d.text)
     notify(d.text, "warning", { title: "Staff alert", timeout: 8000 });
@@ -4989,8 +4851,6 @@ window.addEventListener("hashchange", () => {
     .device-icon{color:#7f8794;font-size:11px;margin-right:6px;flex:0 0 auto;}
     .staff-action-button{background:none;border:none;cursor:pointer;font-size:13px;margin-left:4px;opacity:.75;}
     .staff-action-button:hover{opacity:1;}
-    .report-button{background:none;border:none;cursor:pointer;font-size:12px;margin-left:4px;opacity:.5;color:inherit;}
-    .report-button:hover{opacity:1;}
     .staff-nav-btn{display:flex;align-items:center;gap:6px;margin-right:8px;padding:10px 12px;border:1px solid #ff9800;border-radius:4px;background:#000;color:#ff9800;cursor:pointer;font-size:12px;font-weight:bold;font-family:inherit;transition:all .2s ease;}
     .staff-nav-btn:hover{background:#ff9800;color:#000;}
     #roomStaffFlags{display:flex;gap:6px;align-items:center;margin-left:8px;}

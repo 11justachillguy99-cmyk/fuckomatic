@@ -354,20 +354,8 @@ button,
   outline: none;
 }
 
-.mute-button {
-  margin-left: 8px;
-  margin-right: 4px;
-  padding: 2px 6px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background: #414141;
-  transition: background-color 0.2s ease;
-  flex: 0 0 auto;
-}
-
 /* ── Slide-out tool tray ────────────────────────────────────────────────────
-   Mute, staff note, staff actions and report sit behind the chevron at the
+  Staff notes and actions sit behind the chevron at the
    right end of the bar, so the name and location keep the space. The dislike
    button stays outside the tray because its count is information. */
 
@@ -444,36 +432,12 @@ button,
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
     transition: none;
   }
-  .user-info.tools-open .ui-tools .staff-action-button,
-  .user-info.tools-open .ui-tools .report-button {
+  .user-info.tools-open .ui-tools .staff-action-button {
     font-size: 16px;
     padding: 4px 8px;
     margin: 0;
     opacity: 0.9;
   }
-  .user-info.tools-open .ui-tools .mute-button {
-    font-size: 14px;
-    padding: 3px 8px;
-    margin: 0;
-  }
-}
-
-/* Muted rows keep a visible hint while the tray is closed */
-.chat-row.user-muted .ui-tools-toggle {
-  color: #ff5252;
-  opacity: 1;
-}
-
-.mute-button.muted {
-  background: #ff0000;
-}
-
-.mute-button:hover {
-  background: #222222;
-}
-
-.mute-button:active {
-  background: #ff9999;
 }
 
 /* Chat input box for typing messages */
@@ -745,13 +709,6 @@ button,
   .user-info {
     font-size: 11px;
     padding: 3px 6px;
-  }
-  .user-info .mute-button {
-    margin-left: 5px;
-    margin-right: 2px;
-    padding: 1px 5px;
-    font-size: 11px;
-    line-height: 1.2;
   }
   .user-info .vote-button {
     font-size: 12px;

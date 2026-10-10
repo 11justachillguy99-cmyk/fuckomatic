@@ -115,17 +115,6 @@ function ipForBanRef(ref) {
 }
 const warnings = require("./warnings");
 
-const REPORT_CATEGORIES = {
-  spam: "Spam or flooding",
-  harassment: "Harassment or bullying",
-  hate: "Hate speech or slurs",
-  nsfw: "NSFW or inappropriate content",
-  impersonation: "Impersonation",
-  threats: "Threats or violence",
-  modabuse: "Moderator abuse",
-  other: "Other",
-};
-
 const NEW_ROOM_MAX_CAPACITY = 500;
 
 function roomCapacity(room) {
@@ -3444,14 +3433,6 @@ function clearAFKTimers(userId) {
     clearTimeout(state.afkWarningTimers.get(userId));
     state.afkWarningTimers.delete(userId);
   }
-  if (state.afkTimers.has(userId)) {
-    clearTimeout(state.afkTimers.get(userId));
-    state.afkTimers.delete(userId);
-  }
-  if (state.afkSpectateTimers.has(userId)) {
-    clearTimeout(state.afkSpectateTimers.get(userId));
-    state.afkSpectateTimers.delete(userId);
-  }
 }
 
 function setupAFKTimers(socket, userId) {
@@ -3471,55 +3452,6 @@ function setupAFKTimers(socket, userId) {
         });
     }, CONFIG.TIMING.AFK_WARNING_TIME),
   );
-  state.afkTimers.set(
-    userId,
-    setTimeout(
-      () => handleAFKTimeout(socket, userId),
-      CONFIG.LIMITS.MAX_AFK_TIME,
-    ),
-  );
-}
-
-async function handleAFKTimeout(socket, userId) {
-  if (!socket || !socket.roomId) return;
-  console.log(`AFK timeout: ${userId} in room ${socket.roomId}`);
-  socket.emit("afk timeout", {
-    message: "Removed from room due to inactivity.",
-    redirectTo: "/",
-  });
-  await leaveRoom(socket, userId);
-  clearAFKTimers(userId);
-}
-
-const AFK_SPECTATE_TIME = 15 * 60 * 1000;
-
-async function handleAfkSpectate(socket, userId) {
-  state.afkSpectateTimers.delete(userId);
-  if (!socket || !socket.connected || !socket.roomId || socket.spectating)
-    return;
-  if (socket.isDev || socket.isMod || socket.isBot) return;
-  if (socket.boardOpen) return;
-  const roomId = socket.roomId;
-  if (gamesFloor.isPlaying(roomId, userId)) return;
-  const room = state.rooms.get(roomId);
-  if (!room || !room.users.find((u) => u.id === userId)) return;
-
-  await leaveRoom(socket, userId);
-  socket.tabHidden = undefined;
-
-  const after = state.rooms.get(roomId);
-  if (!after || after.type !== "public") {
-    socket.emit("afk timeout", {
-      message: "Removed from room after being away too long.",
-      redirectTo: "/",
-    });
-    return;
-  }
-  socket.leave("lobby");
-  socket.join(roomId);
-  socket.spectating = roomId;
-  socket.roomId = roomId;
-  socket.emit("afk spectate", spectatePayload(socket, after));
 }
 
 // ── Chat Processing ─────────────────────────────────────────────────────────
@@ -5888,8 +5820,8 @@ function registerSocketHandlers(opts) {
       }),
     );
 
-    // While the tab is hidden the typing-inactivity timers pause and a
-    // longer clock runs; when it expires the user is moved to spectating.
+    // Track hidden tabs for AFK presence and active-time accounting. Hidden
+    // tabs no longer eject users or move them to spectating.
     socket.on(
       "tab state",
       safe(async (data) => {
@@ -5905,17 +5837,7 @@ function registerSocketHandlers(opts) {
         if (hidden) stopActiveTime(socket);
         else startActiveTime(socket);
         clearAFKTimers(userId);
-        if (hidden) {
-          state.afkSpectateTimers.set(
-            userId,
-            setTimeout(
-              () => handleAfkSpectate(socket, userId),
-              AFK_SPECTATE_TIME,
-            ),
-          );
-        } else {
-          setupAFKTimers(socket, userId);
-        }
+        if (!hidden) setupAFKTimers(socket, userId);
       }),
     );
 
@@ -6349,17 +6271,6 @@ function registerSocketHandlers(opts) {
         if (!targetUserId || typeof targetUserId !== "string") return;
         const roomId = getUserCurrentRoom(targetUserId);
         const room = roomId ? state.rooms.get(roomId) : null;
-        receipts.noteOpened(socket, targetUserId, room);
-      }),
-    );
-
-    socket.on(
-      "user report begin",
-      safe(async (data) => {
-        const targetUserId = data?.targetUserId;
-        if (!targetUserId || typeof targetUserId !== "string") return;
-        const room = socket.roomId ? state.rooms.get(socket.roomId) : null;
-        if (!room || !room.users.some((u) => u.id === targetUserId)) return;
         receipts.noteOpened(socket, targetUserId, room);
       }),
     );
@@ -10235,6 +10146,7 @@ function registerSocketHandlers(opts) {
     socket.on(
       "user report",
       safe(async (data) => {
+        return;
         const now = Date.now();
         if (now - (socket._lastReport || 0) < 30000)
           return socket.emit(
@@ -11005,9 +10917,6 @@ function startCleanupIntervals() {
         clearTimeout(state.typingTimeouts.get(id));
         state.typingTimeouts.delete(id);
       }
-    }
-    for (const id of state.afkTimers.keys()) {
-      if (!active.has(id)) clearAFKTimers(id);
     }
   }, 300000);
 

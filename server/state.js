@@ -12,9 +12,8 @@ const cloudflare = require("./cloudflare");
 
 const CONFIG = {
   LIMITS: {
-    MAX_USERNAME_LENGTH: 15,
-    MAX_AFK_TIME: 180000,
-    MAX_LOCATION_LENGTH: 20,
+    MAX_USERNAME_LENGTH: 100,
+    MAX_LOCATION_LENGTH: 100,
     MAX_ROOM_NAME_LENGTH: 25,
     MAX_MESSAGE_LENGTH: 5000,
     MAX_ROOM_CAPACITY: 5,
@@ -157,9 +156,7 @@ const state = {
   pendingChatUpdates: new Map(),
   batchProcessingTimers: new Map(),
 
-  afkTimers: new Map(),
   afkWarningTimers: new Map(),
-  afkSpectateTimers: new Map(),
 
   chatCircuitState: {
     failures: 0,
