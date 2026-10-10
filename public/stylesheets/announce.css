@@ -1,0 +1,343 @@
+/* public/stylesheets/announce.css
+   The developer notice card. Full-screen, one at a time, and deliberately
+   unlike the small modals elsewhere in the lobby: this is the one thing every
+   single person is shown, so it gets room to be read rather than dismissed. */
+
+.an-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 12000; /* above the suggestion board and every lobby modal */
+  background: rgba(0, 0, 0, 0.86);
+  padding: 24px;
+  /* The card scrolls inside itself; the overlay never scrolls. An overlay
+     that scrolls is what iOS grabs instead of the message. */
+  overflow: hidden;
+}
+
+.an-overlay.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: anFade 0.22s ease-out;
+}
+
+@keyframes anFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.an-card {
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--tk-bg, #202020);
+  border: 1px solid var(--tk-border, #616161);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  animation: anRise 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes anRise {
+  from { transform: translateY(14px) scale(0.985); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ── Header ── */
+
+/* Flat, like the dashboard strips. A gradient here read as a different
+   product to the rest of the staff tooling. */
+.an-head {
+  flex-shrink: 0;
+  padding: 24px 30px 18px;
+  border-bottom: 1px solid var(--tk-border, #616161);
+  background: var(--tk-tile, #1b1b1b);
+}
+
+.an-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.an-kind.an-update { background: #6a3fb5; color: #fff; }
+.an-kind.an-notice { background: var(--tk-accent, #ff9800); color: #1a1a1a; }
+.an-kind.an-alert { background: #c62828; color: #fff; }
+
+.an-title {
+  margin: 12px 0 6px;
+  color: var(--tk-text, #fff);
+  font-size: 27px;
+  font-weight: bold;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.an-meta {
+  color: var(--tk-muted, #ccc);
+  font-size: 13px;
+}
+
+/* ── Body: the rendered markdown ── */
+
+.an-body {
+  flex: 1;
+  overflow-y: auto;
+  /* Reaching the end of the message must not hand the gesture to whatever
+     is behind the card. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 30px 24px;
+  color: var(--tk-text, #fff);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.an-body > :first-child { margin-top: 0; }
+.an-body > :last-child { margin-bottom: 0; }
+
+.an-body p { margin: 0 0 13px; }
+
+.an-body h2,
+.an-body h3,
+.an-body h4,
+.an-body h5,
+.an-body h6 {
+  margin: 22px 0 9px;
+  color: var(--tk-accent, #ff9800);
+  line-height: 1.25;
+}
+
+.an-body h2 { font-size: 20px; }
+.an-body h3 { font-size: 17px; }
+.an-body h4,
+.an-body h5,
+.an-body h6 { font-size: 15px; }
+
+.an-body ul,
+.an-body ol {
+  margin: 0 0 13px;
+  padding-left: 24px;
+}
+
+.an-body li { margin-bottom: 5px; }
+
+.an-body a {
+  color: var(--tk-detail, #01ffff);
+  text-decoration: underline;
+}
+
+.an-body code {
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.an-body pre {
+  margin: 0 0 13px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--tk-border, #616161);
+  border-radius: 6px;
+  overflow-x: auto; /* long lines scroll here, never the page */
+}
+
+.an-body pre code {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.an-body blockquote {
+  margin: 0 0 13px;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--tk-accent, #ff9800);
+  color: var(--tk-muted, #ccc);
+}
+
+.an-body hr {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid var(--tk-border, #616161);
+}
+
+.an-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+  margin: 6px 0 13px;
+}
+
+.an-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 13px;
+}
+
+/* ── Footer: reactions and the way out ── */
+
+.an-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 30px 16px;
+  border-top: 1px solid var(--tk-border, #616161);
+  background: var(--tk-tile, #1b1b1b);
+}
+
+.an-react-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Four fixed reactions, nothing else. */
+.an-reacts {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.an-react {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--tk-border, #616161);
+  border-radius: 999px;
+  background: var(--tk-tile, #1b1b1b);
+  color: var(--tk-text, #fff);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.an-react:hover {
+  background: var(--tk-tile-hover, #242424);
+  border-color: var(--tk-muted, #ccc);
+}
+
+.an-react.mine {
+  border-color: var(--tk-accent, #ff9800);
+  background: rgba(255, 152, 0, 0.16);
+}
+
+.an-react-n {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--tk-muted, #ccc);
+}
+
+.an-react.mine .an-react-n {
+  color: var(--tk-accent, #ff9800);
+}
+
+/* ── The way out, held shut for a few seconds ──────────────────────────────
+   Disabled buttons normally read as broken, so this one does the opposite of
+   hiding it: the label counts down, a bar fills the button left to right so
+   the wait is visibly finite, and a line underneath says why. */
+.an-close-wrap {
+  flex: none;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.an-close-btn {
+  position: relative;
+  overflow: hidden;
+  padding: 11px 26px;
+  border: none;
+  border-radius: 6px;
+  background: var(--tk-accent, #ff9800);
+  color: #1a1a1a;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.an-close-btn:hover:not(:disabled) { filter: brightness(1.08); }
+
+.an-close-btn:disabled {
+  /* Dimmed, but never grey-and-dead: it is about to work. */
+  background: #6b4a12;
+  color: #d8c9ae;
+  cursor: default;
+}
+
+.an-close-label {
+  position: relative;
+  z-index: 1; /* above the fill */
+}
+
+/* Fills left to right across the four seconds. */
+.an-close-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: var(--tk-accent, #ff9800);
+  opacity: 0.55;
+  transition: width 1s linear;
+  pointer-events: none;
+}
+
+.an-close-btn:not(:disabled) .an-close-fill { display: none; }
+
+.an-close-hint {
+  color: var(--tk-muted, #ccc);
+  font-size: 11.5px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.an-close-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Phones: the card takes the whole screen so the message gets all of it.
+   100dvh tracks the real visible height under Safari's collapsing URL bar;
+   plain 100vh overflows it, which is what made the outer layer scroll. */
+@media (max-width: 640px) {
+  .an-overlay { padding: 0; }
+  .an-card {
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+  .an-head { padding: 14px 16px 12px; }
+  .an-title { font-size: 20px; margin: 10px 0 4px; }
+  .an-body { padding: 14px 16px 18px; font-size: 14.5px; }
+  .an-foot { padding: 10px 12px 12px; gap: 8px; }
+  .an-close-wrap { width: 100%; margin-left: 0; }
+}

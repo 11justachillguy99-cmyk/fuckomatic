@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <title>Chat Room - Fuckomatic</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="stylesheets/room.css?v=3.3.0" />
+    <link rel="stylesheet" href="stylesheets/info-modal.css?v=1.2.0" />
+    <link rel="stylesheet" href="stylesheets/talkoboard.css?v=4.3.0" />
+    <link rel="stylesheet" href="stylesheets/games.css?v=3.15.0" />
+    <!-- Applies the saved custom theme before first paint -->
+    <link rel="stylesheet" href="stylesheets/effects.css?v=1.3.2" />
+    <link rel="stylesheet" href="stylesheets/announce.css?v=1.1.0" />
+    <script src="js/theme-engine.js?v=2.4.1"></script>
+    <link rel="stylesheet" href="stylesheets/theme-editor.css?v=1.1.0" />
+    <link rel="icon" type="image/png" href="images/icons/favicon.png" />
+    <style>
+      /* Emote system */
+      .emote-autocomplete {
+        position: absolute;
+        z-index: 1000;
+        background-color: #333;
+        border: 1px solid #555;
+        border-radius: 4px;
+        max-height: 300px;
+        overflow-y: auto;
+        width: 200px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        display: none;
+      }
+      .emote-autocomplete-header {
+        padding: 5px 10px;
+        font-weight: bold;
+        border-bottom: 1px solid #555;
+        color: #eee;
+      }
+      .emote-autocomplete-list {
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      .emote-autocomplete-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #444;
+        color: #fff;
+      }
+      .emote-autocomplete-item.selected,
+      .emote-autocomplete-item:hover {
+        background-color: #555;
+      }
+      .emote-autocomplete-item img {
+        width: auto;
+        height: 20px;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+      .emotes-button {
+        padding: 5px 10px;
+        background-color: #444;
+        color: var(--tk-text);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .emotes-dropdown {
+        background-color: #333;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 10px;
+        z-index: 1000;
+        max-width: 300px;
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .emote-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+        background-color: #444;
+        width: 60px;
+        height: 60px;
+        transition: background-color 0.2s ease;
+      }
+      .emote-item:hover {
+        background-color: #555;
+      }
+      .emote-item img {
+        width: 30px;
+        height: auto;
+      }
+      .emote-item span {
+        font-size: 10px;
+        color: var(--tk-text);
+        margin-top: 5px;
+        text-align: center;
+        word-break: break-all;
+      }
+      .chat-input {
+        background-color: var(--tk-chat-bg, #000) !important;
+        color: var(--tk-chat-text, orange) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        outline: none !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+      }
+      .emote {
+        display: inline-block;
+        vertical-align: middle;
+        width: auto;
+        height: 20px;
+        margin: 0 2px;
+      }
+
+      /* App directory */
+      .app-directory-toggle {
+        background: none;
+        border: none;
+        color: var(--tk-text);
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: background-color 0.2s ease;
+        margin: 0 2px;
+        margin-right: 8px;
+      }
+      .app-directory-toggle:hover {
+        background-color: color-mix(in srgb, var(--tk-accent) 10%, transparent);
+      }
+      .app-directory-toggle img {
+        width: 18px;
+        height: 18px;
+      }
+      .app-directory-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 120px;
+        background-color: var(--tk-bg);
+        border: 1px solid var(--tk-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        min-width: 280px;
+        max-width: 320px;
+        display: none;
+        padding: 1rem;
+        margin-top: 5px;
+        /* The list has outgrown short windows, so let it scroll instead of
+           running off the bottom of the screen. */
+        max-height: min(70vh, 560px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+      .app-directory-dropdown::-webkit-scrollbar {
+        width: 8px;
+      }
+      .app-directory-dropdown::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .app-directory-dropdown::-webkit-scrollbar-thumb {
+        background: var(--tk-border);
+        border-radius: 4px;
+      }
+      .app-directory-dropdown::-webkit-scrollbar-thumb:hover {
+        background: var(--tk-accent);
+      }
+      .app-directory-dropdown.show {
+        display: block;
+        animation: fadeInDown 0.2s ease-out;
+      }
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .app-directory-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--tk-accent);
+        font-size: 15px;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--tk-border);
+      }
+      .app-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      .app-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border-radius: 6px;
+        background-color: var(--tk-card);
+        border: 1px solid var(--tk-border);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: var(--tk-text);
+      }
+      .app-item:hover {
+        border-color: var(--tk-accent);
+        background-color: var(--tk-tile);
+        transform: translateY(-1px);
+      }
+      .app-item.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .app-item.disabled:hover {
+        border-color: var(--tk-border);
+        background-color: var(--tk-card);
+        transform: none;
+      }
+      /* Each app's icon sits on a dark tile and carries its own colour; the
+         old orange gradient swallowed the glyph. */
+      .app-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 6px;
+        margin-right: 12px;
+        background-color: var(--tk-tile, #1b1b1b);
+        border: 1px solid #333;
+        font-size: 15px;
+      }
+      .app-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .app-name {
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--tk-text);
+        margin-bottom: 2px;
+      }
+      .app-description {
+        font-size: 12px;
+        color: #cccccc;
+        line-height: 1.3;
+      }
+      .app-enter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        margin-left: 10px;
+        padding: 6px 11px;
+        border-radius: 4px;
+        background: var(--tk-accent);
+        color: #000;
+        font-size: 11px;
+        font-weight: bold;
+        transition: background 0.15s ease;
+      }
+      .app-item:hover .app-enter {
+        background: #ffa726;
+      }
+      .app-status {
+        flex-shrink: 0;
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-left: 10px;
+      }
+      .status-coming-soon {
+        background: var(--tk-tile, #1b1b1b);
+        border: 1px solid var(--tk-border);
+        color: #9a9a9a;
+      }
+      @media (max-width: 768px) {
+        .app-directory-dropdown {
+          right: 10px;
+          left: 10px;
+          width: auto;
+          min-width: auto;
+          max-width: none;
+        }
+        .app-directory-toggle {
+          margin-right: 8px;
+          margin-left: 0;
+        }
+        .app-directory-toggle span {
+          display: none;
+        }
+      }
+      /* Navbar toggles: each icon keeps one colour so the row reads at a
+         glance. The filter shield is green when it protects you and red with
+         a slash when it is off, same slash the bots toggle draws. */
+      #muteToggle i {
+        font-size: 17px;
+        width: 20px;
+        color: #ffca28;
+      }
+      #muteToggle.sound-off i {
+        color: #8d8d8d;
+      }
+      #filterToggle {
+        position: relative;
+      }
+      #filterToggle i {
+        font-size: 17px;
+        color: #4ade80;
+        transition: color 0.2s ease;
+      }
+      #filterToggle.filter-off i {
+        color: #e5484d;
+      }
+      #filterToggle.filter-off::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        top: 50%;
+        height: 2px;
+        background: #e5484d;
+        transform: rotate(-38deg);
+        border-radius: 2px;
+        pointer-events: none;
+      }
+      #layoutToggle {
+        font-size: 18px;
+        color: #5aa9ff;
+      }
+
+      /* Feature announcement modal: the house card - flat dark overlay, black
+         card with a cream header strip, square corners, orange fills. */
+      .feature-announce-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(0, 0, 0, 0.85);
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .feature-announce-overlay.show {
+        display: flex;
+        animation: fadeIn 0.2s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .feature-announce-box {
+        background: #000;
+        border: 1px solid var(--tk-border, #616161);
+        max-width: 440px;
+        width: 100%;
+        text-align: left;
+        overflow: hidden;
+      }
+      .feature-announce-head {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        background: var(--tk-cream, #fdf5e6);
+        color: #000;
+        padding: 13px 16px;
+      }
+      .feature-announce-icon {
+        font-size: 17px;
+        color: #4ade80;
+      }
+      .feature-announce-title {
+        flex: 1;
+        margin: 0;
+        color: #000;
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 0.2px;
+      }
+      .feature-announce-tag {
+        background: var(--tk-accent);
+        color: #000;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding: 2px 7px;
+      }
+      .feature-announce-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+      }
+      .feature-announce-lead {
+        margin: 0;
+        color: #dcdcdc;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .feature-announce-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        background: #1b1b1b;
+        border: 1px solid #333;
+        padding: 11px 13px;
+      }
+      .feature-announce-row > i {
+        width: 20px;
+        margin-top: 2px;
+        font-size: 16px;
+        text-align: center;
+      }
+      .feature-announce-row.f-filter {
+        border-left: 3px solid #4ade80;
+      }
+      .feature-announce-row.f-filter > i {
+        color: #4ade80;
+      }
+      .feature-announce-row.f-bots {
+        border-left: 3px solid #26c6da;
+      }
+      .feature-announce-row.f-bots > i {
+        color: #26c6da;
+      }
+      .feature-announce-row b {
+        display: block;
+        margin-bottom: 2px;
+        color: #fff;
+        font-size: 13.5px;
+      }
+      .feature-announce-row p {
+        margin: 0;
+        color: #c3c3c3;
+        font-size: 12.5px;
+        line-height: 1.55;
+      }
+      .feature-announce-note {
+        margin: 0;
+        color: #8d8d8d;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+      .feature-announce-btn {
+        align-self: flex-end;
+        background: var(--tk-accent);
+        color: #000;
+        border: none;
+        border-radius: 0;
+        padding: 9px 22px;
+        font-size: 13px;
+        font-weight: bold;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .feature-announce-btn:hover {
+        background: #ffa726;
+      }
+
+      .user-info button.staff-action-button i.fas {
+        color: rgb(201, 201, 201) !important;
+      }
+      .user-info button.note-action-button.has-note i.fas {
+        color: #ffb74d !important;
+      }
+    </style>
+      <link rel="stylesheet" href="stylesheets/notify.css?v=1.1.0" />
+  </head>
+  <body>
+    <div class="page-container">
+      <nav class="top-navbar">
+        <div class="navbar-section navbar-left">
+          <div id="dateTime" class="date-time">
+            <span class="date"></span>
+            <span class="time"></span>
+          </div>
+        </div>
+        <div class="navbar-section navbar-center">
+          <div class="brand">Fuckomatic™</div>
+        </div>
+        <div class="navbar-section navbar-right">
+          <button id="muteToggle" class="mute-toggle" aria-label="Toggle Sound">
+            <i class="fas fa-volume-high" id="muteIcon"></i>
+          </button>
+          <button
+            id="filterToggle"
+            class="mute-toggle"
+            aria-label="Toggle Word Filter"
+            title="Word Filter: ON (click to disable)"
+          >
+            <i class="fas fa-shield-halved"></i>
+          </button>
+          <button
+            id="layoutToggle"
+            class="mute-toggle"
+            aria-label="Switch layout"
+            title="Toggle layout"
+            style="display: none"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+          <button
+            id="hideBotsToggle"
+            class="mute-toggle hide-bots-toggle"
+            aria-label="Hide bots"
+            title="Hide bots from your view"
+          >
+            <i class="fas fa-robot"></i>
+          </button>
+          <button
+            id="appDirectoryToggle"
+            class="app-directory-toggle"
+            aria-label="Open App Directory"
+          >
+            <img src="images/icons/apps.png" alt="Apps" id="appDirectoryIcon" />
+            <span>Apps</span>
+          </button>
+          <div class="leave-room" role="button" tabindex="0" title="Leave Room">
+            <i class="fas fa-right-from-bracket"></i><span>Leave Room</span>
+          </div>
+        </div>
+      </nav>
+      <div class="second-navbar">
+        <div class="room-type">Public Room</div>
+        <div class="room-name">*</div>
+        <div class="room-type-group">
+          <div class="room-uptime">*</div>
+          <div class="room-id">*</div>
+        </div>
+      </div>
+      <div class="chat-container"></div>
+      <div class="invite-section" id="inviteSection">
+        <button
+          id="toggleInvite"
+          class="invite-toggle"
+          aria-label="Hide invite link"
+          aria-expanded="true"
+          title="Hide invite link"
+        >
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="invite-text">
+          Invite friends to your room with this link:
+        </div>
+        <div class="invite-container">
+          <div class="invite-link" id="inviteLink"></div>
+          <button id="copyInviteLink" aria-label="Copy invite link">
+            <img src="images/icons/copy.svg" alt="Copy" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emote autocomplete container -->
+    <div id="emoteAutocomplete" class="emote-autocomplete"></div>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="custom-modal">
+      <div class="modal-content">
+        <span class="close-modal-btn">&times;</span>
+        <h3 id="modalTitle">Modal Title</h3>
+        <p id="modalMessage">Modal message goes here.</p>
+        <div id="modalInputContainer" style="display: none">
+          <input
+            type="text"
+            id="modalInput"
+            maxlength="6"
+            pattern="[0-9]*"
+            inputmode="numeric"
+          />
+          <p class="input-error" id="modalInputError"></p>
+        </div>
+        <div class="modal-buttons">
+          <button id="modalCancelBtn" class="modal-btn">Cancel</button>
+          <button id="modalConfirmBtn" class="modal-btn modal-confirm-btn">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature announcement: the word filter and bots are personal toggles -->
+    <div id="featureAnnounce" class="feature-announce-overlay">
+      <div class="feature-announce-box">
+        <div class="feature-announce-head">
+          <i class="fas fa-shield-halved feature-announce-icon"></i>
+          <h2 class="feature-announce-title">Automod and bots are optional</h2>
+          <span class="feature-announce-tag">New</span>
+        </div>
+        <div class="feature-announce-body">
+          <p class="feature-announce-lead">
+            Two of the icons in the top bar are yours to switch. Click one to
+            turn it on or off whenever you like.
+          </p>
+          <div class="feature-announce-row f-filter">
+            <i class="fas fa-shield-halved"></i>
+            <div>
+              <b>Word filter</b>
+              <p>
+                Stars out offensive words for you. A green shield means it is
+                on; red with a slash means it is off.
+              </p>
+            </div>
+          </div>
+          <div class="feature-announce-row f-bots">
+            <i class="fas fa-robot"></i>
+            <div>
+              <b>Hide bots</b>
+              <p>
+                Takes bot users out of your view. Click the robot again to
+                bring them back.
+              </p>
+            </div>
+          </div>
+          <p class="feature-announce-note">
+            Both only change what <strong>you</strong> see. Other people in
+            the room are not affected.
+          </p>
+          <button class="feature-announce-btn" id="featureAnnounceClose">
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <audio id="joinSound" src="audio/ding.mp3"></audio>
+    <audio id="leaveSound" src="audio/ding.mp3"></audio>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Shared staff UI kit (modals, menus, toasts) -->
+    <script src="js/modernnotify.min.js?v=1.1.0"></script>
+    <script src="js/notify.js?v=1.0.0"></script>
+    <script src="js/staff-ui.js?v=1.11.0"></script>
+    <script src="js/desk.js?v=1.1.0"></script>
+    <script src="js/word-filter-client.js?v=2.3.0"></script>
+    <script src="js/identity.js?v=1.0.2"></script>
+    <script src="js/connection-overlay.js?v=1.2.0"></script>
+    <script src="js/room-client.js?v=3.31.0"></script>
+    <script src="js/talkoboard.js?v=4.5.0"></script>
+    <script src="js/theme-editor.js?v=3.2.0"></script>
+
+    <script src="js/games-client.js?v=4.21.0"></script>
+
+    <!-- Feature announcement logic -->
+    <script src="js/staff-guide-modal.js?v=1.1.0"></script>
+    <script src="js/feature-announce.js?v=1.1.0"></script>
+    <!-- Developer notices. Loaded after room-client.js, which publishes the
+         socket this reuses, so a notice posted now reaches people mid-chat. -->
+    <script src="js/announce.js?v=1.2.0"></script>
+    <script src="js/warning.js?v=1.1.0"></script>
+    <script src="js/staff-key.js?v=1.0.0"></script>
+  </body>
+</html>

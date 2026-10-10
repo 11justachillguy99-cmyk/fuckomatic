@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Themes - Fuckomatic</title>
+    <meta
+      name="description"
+      content="Browse featured and community-made Fuckomatic themes, apply them with one click, vote for your favorites, or build and publish your own in the visual theme editor."
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="stylesheets/notify.css?v=1.0.0" />
+    <link rel="icon" type="image/png" href="images/icons/favicon.png" />
+    <script src="js/theme-engine.js?v=2.4.1"></script>
+    <style>
+      @font-face {
+        font-family: "talkoSS";
+        src: url("fonts/Sansation_Light.ttf");
+      }
+      @font-face {
+        font-family: "talkoSS";
+        src: url("fonts/Sansation_Bold.ttf");
+        font-weight: bold;
+      }
+      :root {
+        --tk-accent: #ff9800;
+        --tk-accent-hover: #f57c00;
+        --tk-bg: #202020;
+        --tk-text: #ffffff;
+        --tk-muted: #cccccc;
+        --tk-border: #616161;
+        --tk-tile: #1b1b1b;
+        --tk-tile-hover: #242424;
+        --tk-card: #000000;
+        --tk-cream: #fdf5e6;
+        --tk-cream-text: #000000;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--tk-bg);
+        color: var(--tk-text);
+        font-family: talkoSS, Arial, sans-serif;
+      }
+      .wrap { max-width: 1150px; margin: 0 auto; padding: 20px 16px 60px; }
+
+      .page-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--tk-border);
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .page-title { font-size: 24px; font-weight: bold; }
+      .page-title .tk { color: var(--tk-accent); }
+      .back {
+        background: var(--tk-card);
+        color: var(--tk-text);
+        border: 1px solid var(--tk-accent);
+        border-radius: 5px;
+        padding: 9px 16px;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .back:hover { background: var(--tk-accent); color: #000; }
+
+      /* ── Search, front and center ── */
+
+      .search-hero {
+        max-width: 620px;
+        margin: 0 auto 22px;
+        text-align: center;
+      }
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--tk-tile);
+        border: 1px solid var(--tk-border);
+        border-radius: 8px;
+        padding: 0 16px;
+        transition: border-color 0.15s ease;
+      }
+      .search-box:focus-within { border-color: var(--tk-accent); }
+      .search-box i { color: var(--tk-muted); font-size: 14px; flex: none; }
+      .search-box input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--tk-text);
+        font-family: inherit;
+        font-size: 15px;
+        padding: 13px 0;
+        min-width: 0;
+      }
+      .search-box input::placeholder { color: #888; }
+      .search-clear {
+        flex: none;
+        background: none;
+        border: none;
+        color: var(--tk-muted);
+        font-size: 15px;
+        cursor: pointer;
+        padding: 4px;
+        display: none;
+      }
+      .search-clear:hover { color: var(--tk-accent); }
+      .search-hint { font-size: 11.5px; color: #888; margin-top: 7px; }
+
+      .strip {
+        background: var(--tk-cream);
+        color: var(--tk-cream-text);
+        font-size: 16px;
+        font-weight: bold;
+        padding: 9px 14px;
+        border-radius: 5px 5px 0 0;
+      }
+      .section {
+        background: var(--tk-tile);
+        border: 1px solid var(--tk-border);
+        border-radius: 5px;
+        margin-bottom: 24px;
+        overflow: hidden;
+      }
+      .section-body { padding: 16px 14px; }
+      .note { font-size: 12px; color: var(--tk-muted); line-height: 1.5; }
+      .note b { color: var(--tk-accent); }
+
+      /* ── Featured cards ── */
+
+      .featured-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+      }
+      .feat-card {
+        background: var(--tk-card);
+        border: 1px solid var(--tk-border);
+        border-radius: 6px;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+        display: flex;
+        flex-direction: column;
+      }
+      .feat-card:hover { border-color: var(--tk-accent); }
+      .feat-img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+        display: block;
+        background: #111;
+      }
+      .feat-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+      .feat-title { font-size: 16px; font-weight: bold; color: var(--tk-accent); }
+      .feat-desc { font-size: 12.5px; color: var(--tk-muted); line-height: 1.4; flex: 1; }
+      .feat-by { font-size: 11px; color: #888; }
+
+      /* ── Community controls ── */
+
+      .comm-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .sort-chips { display: flex; gap: 6px; }
+      .chip {
+        background: var(--tk-card);
+        color: var(--tk-muted);
+        border: 1px solid var(--tk-border);
+        border-radius: 999px;
+        padding: 6px 15px;
+        font-size: 12px;
+        font-weight: bold;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      }
+      .chip:hover { color: var(--tk-text); border-color: var(--tk-accent); }
+      .chip.active {
+        background: var(--tk-accent);
+        border-color: var(--tk-accent);
+        color: #1a1a1a;
+      }
+      .comm-count { margin-left: auto; font-size: 12px; color: #888; }
+
+      /* ── Community cards ── */
+
+      .comm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 14px;
+        align-items: start;
+      }
+      .theme-card {
+        background: var(--tk-card);
+        border: 1px solid var(--tk-border);
+        border-radius: 6px;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+      }
+      .theme-card:hover { border-color: var(--tk-accent); }
+      .swatches { display: flex; height: 16px; }
+      .swatches i { flex: 1; }
+      .theme-body { padding: 12px; }
+      .theme-title { font-size: 15px; font-weight: bold; overflow-wrap: anywhere; }
+      .theme-desc {
+        font-size: 12.5px;
+        color: var(--tk-muted);
+        margin-top: 4px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+      .theme-meta { font-size: 11px; color: #888; margin-top: 8px; }
+      .theme-meta b { color: var(--tk-accent); font-weight: bold; }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 11px;
+        flex-wrap: wrap;
+      }
+
+      /* Vote group: server-counted, one vote per browser */
+      .votes {
+        display: inline-flex;
+        align-items: center;
+        background: var(--tk-tile);
+        border: 1px solid var(--tk-border);
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .vote-btn {
+        background: transparent;
+        border: none;
+        color: var(--tk-muted);
+        width: 34px;
+        height: 32px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .vote-btn:hover { background: var(--tk-tile-hover); color: var(--tk-text); }
+      .vote-btn.on-up { color: #1a1a1a; background: var(--tk-accent); }
+      .vote-btn.on-down { color: #1a1a1a; background: #64b5f6; }
+      .vote-score {
+        min-width: 30px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: bold;
+        color: var(--tk-text);
+        padding: 0 4px;
+      }
+      .vote-score.pos { color: var(--tk-accent); }
+      .vote-score.neg { color: #64b5f6; }
+
+      .card-actions { display: flex; gap: 8px; margin-left: auto; }
+      .btn {
+        background: var(--tk-tile);
+        color: var(--tk-text);
+        border: 1px solid transparent;
+        border-radius: 5px;
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+      .btn:hover { background: var(--tk-tile-hover); border-color: var(--tk-border); }
+      .btn-primary {
+        background: var(--tk-card);
+        border-color: var(--tk-accent);
+        color: var(--tk-text);
+      }
+      .btn-primary:hover { background: var(--tk-accent); color: #000; }
+
+      /* Expanded detail */
+      .expand { display: none; border-top: 1px solid var(--tk-border); padding: 12px; }
+      .theme-card.open .expand { display: block; }
+      .pal { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+      .pal-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--tk-tile);
+        border: 1px solid var(--tk-border);
+        border-radius: 4px;
+        padding: 3px 8px 3px 3px;
+        font-size: 10.5px;
+        color: var(--tk-muted);
+      }
+      .pal-chip i { width: 16px; height: 16px; border-radius: 3px; display: inline-block; border: 1px solid rgba(255,255,255,.15); }
+      .mini {
+        border-radius: 5px;
+        overflow: hidden;
+        border: 1px solid var(--tk-border);
+        font-size: 12px;
+      }
+      .mini-strip { font-weight: bold; padding: 5px 10px; font-size: 12px; }
+      .mini-body { padding: 10px; }
+      .mini-title { font-weight: bold; margin-bottom: 3px; }
+      .mini-text { font-size: 11.5px; }
+      .mini-btn {
+        display: inline-block;
+        margin-top: 8px;
+        border-radius: 4px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .empty { text-align: center; color: var(--tk-muted); padding: 30px 0; font-size: 14px; }
+      .empty i { font-size: 34px; color: var(--tk-accent); display: block; margin-bottom: 10px; }
+
+      .make-own {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .make-own p { margin: 0; flex: 1 1 300px; }
+
+      @media (max-width: 640px) {
+        .page-title { font-size: 19px; }
+        .comm-grid { grid-template-columns: 1fr; }
+        .featured-grid { grid-template-columns: 1fr; }
+        .search-box input { font-size: 14px; padding: 12px 0; }
+        .comm-count { margin-left: 0; width: 100%; }
+      }
+    </style>
+      <link rel="stylesheet" href="stylesheets/info-modal.css?v=1.2.0" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="page-head">
+        <div class="page-title"><span class="tk">Fuckomatic</span> Themes</div>
+        <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Back to Lobby</a>
+      </div>
+
+      <div class="search-hero">
+        <div class="search-box">
+          <i class="fas fa-magnifying-glass"></i>
+          <input
+            id="themeSearch"
+            type="search"
+            placeholder="Search themes by name or creator..."
+            autocomplete="off"
+          />
+          <button id="searchClear" class="search-clear" aria-label="Clear search">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+        <div class="search-hint">
+          Apply any theme with one click. Vote for the ones you like: one vote
+          per browser, counted on the server.
+        </div>
+      </div>
+
+      <div class="section" id="makeOwnSection">
+        <div class="strip">Make Your Own...</div>
+        <div class="section-body make-own">
+          <p class="note">
+            Build a theme with zero CSS in the visual editor: colors, corner
+            roundness, glass and brutal effects, and Google fonts, all previewed
+            live. Open the lobby and press <b>Customize</b>, or in a room press
+            <b>Apps</b> then <b>Theme Editor</b>. When you like it, hit
+            <b>Publish</b> to share it here.
+          </p>
+          <a class="back" href="index.html"><i class="fas fa-palette"></i> Open the editor</a>
+        </div>
+      </div>
+
+      <div class="section" id="featuredSection">
+        <div class="strip">Featured...</div>
+        <div class="section-body">
+          <div id="featured" class="featured-grid"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="strip">Community Themes...</div>
+        <div class="section-body">
+          <div class="comm-controls">
+            <div class="sort-chips">
+              <button class="chip active" id="sortTop" type="button">
+                <i class="fas fa-arrow-trend-up"></i> Top
+              </button>
+              <button class="chip" id="sortNew" type="button">
+                <i class="fas fa-clock"></i> New
+              </button>
+            </div>
+            <div class="comm-count" id="commCount"></div>
+          </div>
+          <div id="community" class="comm-grid"></div>
+          <div id="commEmpty" class="empty" style="display: none">
+            <i class="fas fa-palette"></i>
+            No community themes yet. Yours could be the first!
+          </div>
+          <div id="commNoMatch" class="empty" style="display: none">
+            <i class="fas fa-magnifying-glass"></i>
+            Nothing matches that search.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/jquery.min.js?v=1.0.2"></script>
+    <script src="js/modernnotify.min.js?v=1.1.0"></script>
+    <script src="js/notify.js?v=1.0.0"></script>
+    <script src="js/identity.js"></script>
+    <script src="js/themes-page.js?v=2.0.0"></script>
+      <script src="js/warning.js?v=1.1.0"></script>
+      <script src="js/staff-key.js?v=1.0.0"></script>
+  </body>
+</html>

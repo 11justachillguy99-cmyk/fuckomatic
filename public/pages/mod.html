@@ -1,0 +1,5689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#202020" />
+    <title>Moderation Dashboard - Fuckomatic</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="images/icons/favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      /* Fonts matching the rest of the site */
+      @font-face {
+        font-family: "talkoSS";
+        src: url("../fonts/Sansation_Light.ttf");
+      }
+      @font-face {
+        font-family: "talkoSS";
+        src: url("../fonts/Sansation_Bold.ttf");
+        font-weight: bold;
+      }
+
+      /* Lobby design language: dark flat tiles, black cards, thin borders,
+         cream section strips, colorful icons, orange fills on hover. */
+      :root {
+        color-scheme: dark;
+        --maxw: 93.75rem;
+        --bg: #202020;
+        --card: #000000;
+        --tile: #1b1b1b;
+        --tile-hover: #242424;
+        --line: #616161;
+        --line-soft: #333333;
+        --orange: #ff9800;
+        --orange-hover: #ffad33;
+        --cream: #fdf5e6;
+        --txt: #ffffff;
+        --dim: #c3c3c3;
+        --dim2: #8d8d8d;
+        --red: #ff5468;
+        --amber: #ffb454;
+        --gold: #ffc107;
+        --blue: #5aa9ff;
+        --purple: #c08bff;
+        --green: #57d9a3;
+        --lead: #77dd77;
+        --cyan: #01ffff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: talkoSS, Arial, sans-serif;
+        line-height: 1.55;
+        font-size: 0.9375rem;
+      }
+      a {
+        color: var(--orange);
+        text-decoration: none;
+      }
+      .mono {
+        font-family: "Courier New", monospace;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      /* ── Gate states (loading / denied) ── */
+      .gate {
+        max-width: 35rem;
+        margin: 0 auto;
+        text-align: center;
+        padding: 6.875rem 1.5rem;
+      }
+      .gate .gate-icon {
+        font-size: 3.25rem;
+        color: var(--orange);
+        margin-bottom: 1.125rem;
+      }
+      .gate.denied .gate-icon {
+        color: var(--red);
+      }
+      .gate h2 {
+        font-size: 1.625rem;
+        font-weight: normal;
+        margin: 0 0 0.625rem;
+      }
+      .gate p {
+        color: var(--dim);
+        margin: 0 auto 0.5rem;
+        max-width: 26.25rem;
+      }
+      .gate-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      /* ── Header (matches about / app-directory) ── */
+      .header {
+        position: relative;
+        background: #303030;
+        border-bottom: 1px solid var(--line);
+        padding: 2rem 0 1.6rem;
+        text-align: center;
+      }
+      .header-content {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+      .header h1 {
+        font-size: 1.875rem;
+        font-weight: normal;
+        color: var(--orange);
+        margin: 0 0 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+      }
+      .header p {
+        margin: 0;
+        font-size: 1rem;
+        color: #fff;
+        opacity: 0.9;
+      }
+      .nav-back {
+        position: absolute;
+        top: 1.6rem;
+        left: 1.6rem;
+        background: var(--card);
+        color: #fff;
+        border: 1px solid var(--orange);
+        padding: 0.625rem 0.9375rem;
+        border-radius: 0.3125rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .nav-back:hover {
+        background: var(--orange);
+        color: #000;
+      }
+      .me-chip {
+        position: absolute;
+        top: 1.6rem;
+        right: 1.6rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+        color: #fff;
+      }
+
+      /* Role chips. Rank colors: dev red, full mod (L2) blue, junior (L1)
+         purple. The plain .mod chip stays orange for places that only know
+         "mod vs dev" (feed, comments). */
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3125rem;
+        font-size: 0.625rem;
+        font-weight: bold;
+        padding: 0.1875rem 0.5rem;
+        border-radius: 0.25rem;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+      }
+      .chip.dev {
+        background: var(--red);
+        color: #1a0005;
+      }
+      .chip.mod {
+        background: var(--orange);
+        color: #1a1200;
+      }
+      .chip.l3 {
+        background: var(--lead);
+        color: #00220f;
+      }
+      .chip.l2 {
+        background: var(--blue);
+        color: #001229;
+      }
+      .chip.l1 {
+        background: var(--purple);
+        color: #16002b;
+      }
+      .who.dev {
+        color: var(--red);
+        font-weight: bold;
+      }
+      .who.mod {
+        color: var(--orange);
+        font-weight: bold;
+      }
+
+      /* ── Tab navigation (horizontal, sticky, colorful icons) ── */
+      .dash-nav {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+      }
+      .dash-nav-inner {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 0.75rem;
+        display: flex;
+        gap: 0.25rem;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+      .dash-nav-inner::-webkit-scrollbar {
+        height: 0.375rem;
+      }
+      .dash-nav-inner::-webkit-scrollbar-thumb {
+        background: var(--line);
+        border-radius: 0.1875rem;
+      }
+      .nav-item {
+        appearance: none;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--dim);
+        font-family: inherit;
+        font-size: 0.875rem;
+        font-weight: bold;
+        padding: 0.875rem 0.9375rem 0.75rem;
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease;
+      }
+      .nav-item:hover {
+        color: var(--txt);
+      }
+      .nav-item.active {
+        color: var(--txt);
+        border-bottom-color: var(--orange);
+      }
+      /* Colorful tab icons, like the lobby menu */
+      .nav-item[data-tab="activity"] i {
+        color: var(--orange);
+      }
+      .nav-item[data-tab="reports"] i {
+        color: var(--red);
+      }
+      .nav-item[data-tab="applications"] i {
+        color: #28a745;
+      }
+      .nav-item[data-tab="appeals"] i {
+        color: var(--amber);
+      }
+      .nav-item[data-tab="bans"] i {
+        color: var(--red);
+      }
+      .nav-item[data-tab="mods"] i {
+        color: var(--blue);
+      }
+      .nav-item[data-tab="sessions"] i {
+        color: var(--cyan);
+      }
+      .nav-item[data-tab="guide"] i {
+        color: #17a2b8;
+      }
+      .nav-item[data-tab="links"] i {
+        color: var(--green);
+      }
+      #linkAllowInput {
+        max-width: 320px;
+      }
+      .link-allow-row .mc-title i {
+        color: var(--green);
+        margin-right: 8px;
+      }
+      .link-allow-row .covers {
+        color: var(--dim);
+        font-size: 0.75rem;
+      }
+      #focusBar .focus-actions {
+        display: inline-flex;
+        gap: 6px;
+        margin-left: 10px;
+        vertical-align: middle;
+      }
+      .ni-badge {
+        background: var(--tile);
+        color: var(--dim);
+        font-size: 0.6875rem;
+        font-weight: bold;
+        padding: 0.0625rem 0.4375rem;
+        border-radius: 1.25rem;
+        min-width: 1.25rem;
+        text-align: center;
+      }
+      .nav-item.active .ni-badge {
+        background: var(--orange);
+        color: #000;
+      }
+
+      /* ── Content container + panels ── */
+      .main-content {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 1.5rem 1.25rem 5rem;
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+
+      /* Cream section strip, same as the lobby "Be Known As..." bar */
+      .strip {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        background: var(--cream);
+        color: #000;
+        font-size: 1rem;
+        font-weight: bold;
+        padding: 0.5625rem 0.875rem;
+        border-radius: 0.3125rem;
+        margin-bottom: 1rem;
+      }
+      .strip .sub {
+        font-size: 0.75rem;
+        font-weight: normal;
+        color: #444;
+      }
+      .strip .ph-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 0.375rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .strip i.lead {
+        width: 1.25rem;
+        text-align: center;
+      }
+      #tab-activity .strip i.lead,
+      .ic-orange {
+        color: var(--orange);
+      }
+      .strip.mini {
+        margin-top: 1.625rem;
+        font-size: 0.875rem;
+        padding: 0.4375rem 0.875rem;
+      }
+
+      /* ── Buttons: flat lobby tiles ── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4375rem;
+        background: var(--tile);
+        border: 1px solid transparent;
+        color: var(--txt);
+        border-radius: 0.3125rem;
+        padding: 0.5625rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: bold;
+        font-family: inherit;
+        cursor: pointer;
+        transition:
+          background-color 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+      }
+      .btn:hover {
+        background: var(--tile-hover);
+        border-color: var(--line);
+      }
+      .btn.primary {
+        background: var(--orange);
+        color: #000;
+      }
+      .btn.primary:hover {
+        background: var(--orange-hover);
+        border-color: transparent;
+      }
+      .btn.danger:hover {
+        color: var(--red);
+        border-color: var(--red);
+        background: var(--tile);
+      }
+      .btn.sm {
+        padding: 0.4375rem 0.6875rem;
+        font-size: 0.7813rem;
+      }
+      /* Buttons sitting on the cream strip need a dark body to read well */
+      .strip .btn {
+        background: var(--card);
+        color: #fff;
+      }
+      .strip .btn:hover {
+        border-color: var(--orange);
+        color: var(--orange);
+      }
+      .strip .btn.primary {
+        background: var(--orange);
+        color: #000;
+        border-color: transparent;
+      }
+      .strip .btn.primary:hover {
+        background: var(--orange-hover);
+      }
+
+      /* ── Toolbar: search + segments ── */
+      .toolbar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      /* Takes the slack, which puts the view switcher at the far right of the
+         bar on its own rather than shrinking the search to make room. */
+      .search-wrap {
+        position: relative;
+        flex: 1 1 20rem;
+        min-width: 11.25rem;
+      }
+      .search-wrap i {
+        position: absolute;
+        left: 0.8125rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--dim2);
+        font-size: 0.8125rem;
+      }
+      .search {
+        width: 100%;
+        background: var(--card);
+        border: 1px solid var(--line);
+        color: var(--txt);
+        padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+        font-size: 0.875rem;
+        font-family: inherit;
+        outline: none;
+        border-radius: 0.3125rem;
+      }
+      .search:focus {
+        border-color: var(--orange);
+      }
+      .seg {
+        display: inline-flex;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .seg button {
+        background: transparent;
+        border: none;
+        color: var(--dim);
+        padding: 0.5625rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: bold;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background-color 0.15s ease;
+      }
+      .seg button:hover {
+        background: var(--tile-hover);
+        color: var(--txt);
+      }
+      .seg button.active {
+        background: var(--orange);
+        color: #000;
+      }
+
+      /* ── Column grids ──
+         .grid3 (activity feed, roster, sessions) stays multi-column with
+         uniform fixed-height cards: those are skim-and-move-on lists.
+         .grid2 (reports, applications, appeals, suggestions) is ONE
+         column of naturally-sized cards. Staff read these top to bottom and
+         act on them, so nothing inside is clipped or scrolled away - two
+         narrow columns of inner scrollbars made them unreadable. */
+      .grid3,
+      .grid2 {
+        display: grid;
+        gap: 0.75rem;
+      }
+      .grid2 {
+        align-items: start;
+      }
+      /* Rows are as tall as the tallest card in that row, and nothing inside a
+         card scrolls. A fixed card height with an inner scrollbar was tried
+         first and made the feed unusable for real work: the part of an entry
+         that mattered was always the part scrolled out of sight. */
+      .grid3 {
+        align-items: stretch;
+      }
+      .grid3 > *,
+      .grid2 > * {
+        min-width: 0;
+      }
+      .grid3 > .entry,
+      .grid3 > .modcard,
+      .grid3 > .sesscard {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .entry .e-body,
+      .modcard .mc-grid,
+      .sesscard .sess-nets {
+        flex: 0 0 auto;
+        min-height: 0;
+        overflow: visible;
+      }
+      /* Footers sit at the bottom of the card however tall the row turned out */
+      .entry .cmtbox,
+      .modcard .mc-actions {
+        flex: none;
+        margin-top: auto;
+      }
+      .entry .e-top,
+      .entry .detail,
+      .modcard .mc-top,
+      .sesscard .sess-top {
+        flex: none;
+      }
+      .entry .detail {
+        max-height: none;
+        overflow: visible;
+      }
+      /* Thin scrollbars so the inner scroll areas stay unobtrusive */
+      .grid3 ::-webkit-scrollbar,
+      .grid2 ::-webkit-scrollbar {
+        width: 0.5rem;
+      }
+      .grid3 ::-webkit-scrollbar-thumb,
+      .grid2 ::-webkit-scrollbar-thumb {
+        background: var(--line-soft);
+        border-radius: 0.25rem;
+      }
+      .grid3 ::-webkit-scrollbar-thumb:hover,
+      .grid2 ::-webkit-scrollbar-thumb:hover {
+        background: var(--line);
+      }
+      .grid3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .grid2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      @media (max-width: 71.875rem) {
+        .grid3 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 47.5rem) {
+        .grid3 {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        /* The label beside the days squeezed them onto two rows on a phone;
+           stacked, all seven days share one full-width row. */
+        .daybar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.375rem;
+        }
+        .daypicker {
+          width: 100%;
+        }
+        .daypicker .daybtn {
+          min-width: 2.5rem;
+          padding: 0.375rem 0.125rem;
+        }
+      }
+      .grid3 > .empty,
+      .grid2 > .empty,
+      .grid3 > .pager,
+      .grid2 > .pager {
+        grid-column: 1 / -1;
+      }
+
+      .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      /* Tells a junior mod why a board has no buttons on it */
+      .ro-note {
+        display: flex;
+        align-items: center;
+        gap: 0.5625rem;
+        background: rgba(192, 139, 255, 0.1);
+        border: 1px solid rgba(192, 139, 255, 0.3);
+        border-radius: 0.3125rem;
+        padding: 0.625rem 0.8125rem;
+        margin: 0 0 0.875rem;
+        font-size: 0.7813rem;
+        color: var(--dim);
+        line-height: 1.5;
+      }
+      .ro-note i {
+        color: var(--purple);
+        flex: none;
+      }
+
+      /* Info note under a strip */
+      .note-box {
+        margin: 0 0 1rem;
+        padding: 0.75rem 0.9375rem;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        color: var(--dim);
+        font-size: 0.8125rem;
+        line-height: 1.55;
+        display: flex;
+        gap: 0.6875rem;
+        align-items: flex-start;
+      }
+      .note-box i {
+        color: #17a2b8;
+        margin-top: 0.1875rem;
+      }
+      .note-box.warn {
+        background: rgba(255, 82, 82, 0.08);
+        border: 1px solid rgba(255, 82, 82, 0.35);
+        color: var(--text);
+      }
+      .note-box.warn i {
+        color: #ff5252;
+      }
+
+      .focusbar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.6875rem 0.875rem;
+        margin-bottom: 0.875rem;
+        background: var(--tile);
+        border: 1px solid var(--orange);
+        border-radius: 0.3125rem;
+        font-size: 0.8125rem;
+        color: var(--orange);
+      }
+      .focusbar .sum {
+        color: var(--dim);
+      }
+      .focusbar .sum b {
+        color: var(--txt);
+      }
+      .roster {
+        font-size: 0.8125rem;
+        color: var(--dim2);
+        margin-bottom: 0.875rem;
+      }
+      .roster b {
+        font-weight: bold;
+      }
+      .feed-note {
+        color: var(--dim2);
+        font-size: 0.75rem;
+        text-align: center;
+        padding: 0.25rem 0 0.75rem;
+      }
+      .empty {
+        text-align: center;
+        color: var(--dim2);
+        padding: 3.125rem 1.25rem;
+        font-size: 0.875rem;
+      }
+      .empty i {
+        font-size: 2.25rem;
+        display: block;
+        margin-bottom: 0.875rem;
+        color: var(--gold);
+      }
+
+      /* ── The week strip ──
+         Seven days, oldest on the left, today on the right, each with how many
+         entries it holds under the current search. */
+      .daybar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+      }
+      .daybar-label {
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--dim2);
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .daybar-label i {
+        color: var(--gold);
+        margin-right: 0.25rem;
+      }
+      .daypicker {
+        display: flex;
+        gap: 0.25rem;
+        flex: 1;
+        min-width: 0;
+        flex-wrap: wrap;
+      }
+      .daybtn {
+        flex: 1 1 0;
+        min-width: 3.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.0625rem;
+        padding: 0.375rem 0.25rem;
+        background: var(--tile);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        color: var(--dim);
+        font-family: inherit;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          color 0.15s ease;
+      }
+      .daybtn:hover {
+        border-color: var(--line);
+        color: var(--txt);
+      }
+      .daybtn.active {
+        border-color: var(--orange);
+        color: var(--txt);
+        background: rgba(255, 152, 0, 0.1);
+      }
+      .daybtn .dayname {
+        font-size: 0.625rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      .daybtn .daynum {
+        font-size: 0.8125rem;
+        font-weight: bold;
+      }
+      .daybtn .daycount {
+        font-size: 0.6875rem;
+        color: var(--gold);
+        font-variant-numeric: tabular-nums;
+      }
+      .daybtn .daycount.zero {
+        color: var(--dim2);
+      }
+      .daybtn.active .daycount {
+        color: var(--orange);
+      }
+      /* Sits at the end of the filter row, hard right of the Inbox tab. */
+      .viewseg {
+        flex: none;
+        margin-left: auto;
+      }
+      .viewseg button {
+        white-space: nowrap;
+      }
+      .viewseg button i {
+        margin-right: 0.25rem;
+      }
+      body.compact .compact-toggle {
+        border-color: var(--orange);
+        color: var(--orange);
+      }
+
+      /* ── Activity entry cards ── */
+      .entry {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+      }
+      .entry:hover {
+        border-color: var(--line);
+      }
+      .e-top {
+        display: flex;
+        gap: 0.6875rem;
+        align-items: flex-start;
+        padding: 0.75rem 0.8125rem 0.5rem;
+      }
+      /* Colorful square icon tile, like the lobby menu icons */
+      .ico {
+        flex: none;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.3125rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9375rem;
+        background: var(--tile);
+      }
+      .e-head {
+        flex: 1;
+        min-width: 0;
+      }
+      .e-title {
+        font-size: 0.875rem;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+      .e-title .act {
+        font-weight: bold;
+      }
+      .e-when {
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        margin-top: 0.125rem;
+      }
+      .e-del {
+        background: none;
+        border: none;
+        color: var(--dim2);
+        cursor: pointer;
+        padding: 0.125rem 0.25rem;
+        font-size: 0.75rem;
+        opacity: 0;
+        transition: opacity 0.12s, color 0.12s;
+      }
+      .entry:hover .e-del,
+      .e-del:focus-visible {
+        opacity: 1;
+      }
+      .e-del:hover {
+        color: var(--red);
+      }
+      .e-body {
+        padding: 0.125rem 0.8125rem 0.6875rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+      }
+      .kv {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+        align-items: baseline;
+      }
+      .kv .k {
+        flex: none;
+        width: 3.875rem;
+        color: var(--dim2);
+        font-size: 0.6875rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .kv .v {
+        min-width: 0;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .kv .v.ip {
+        color: var(--amber);
+        font-family: "Courier New", monospace;
+        font-size: 0.7813rem;
+      }
+      .kv .v.dimv {
+        color: var(--dim);
+      }
+      /* A name with its authoritative staff badge beside it */
+      .whorole {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+      .whorole .chip {
+        font-size: 0.5625rem;
+        padding: 0.0625rem 0.375rem;
+      }
+      .uref {
+        color: var(--txt);
+        border-bottom: 1px dotted var(--dim2);
+        cursor: pointer;
+      }
+      .uref:hover {
+        color: var(--orange);
+        border-color: var(--orange);
+      }
+      /* ── Left accent strips ──────────────────────────────────────────
+         Anything wearing a coloured strip down its left edge has SQUARE
+         corners. A rounded corner clips the strip into a tapered sliver that
+         reads as a rendering fault rather than a colour code, and the strip
+         is doing real work here: it is what tells you the kind of a card at a
+         glance. Square corners, full-height strip. This holds for every
+         element with a border-left accent, on every page. */
+      .entry .detail {
+        margin: 0 0.8125rem 0.6875rem;
+        padding: 0.5625rem 0.75rem;
+        background: var(--tile);
+        border-left: 3px solid var(--orange);
+        border-radius: 0;
+        color: var(--txt);
+        font-size: 0.8125rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      /* ── Compact mode ──
+         One column of full records, read straight down, at a width you can
+         actually read a line of text at. Compact means fewer lines and larger
+         type than the three-column view, not smaller everything.
+
+         The column is capped: stretched to a 1600px screen the fields end up
+         miles from their labels and the body text runs to 200 characters a
+         line. */
+      body.compact .grid3 {
+        gap: 0.5rem;
+        grid-template-columns: minmax(0, 1fr);
+      }
+      /* The whole activity area becomes one centred column: the controls above
+         the feed share its edges, so the cards read as a deliberate reading
+         column rather than a list that got cut short on one side. */
+      body.compact #tab-activity .strip,
+      body.compact #tab-activity .toolbar,
+      body.compact #tab-activity .daybar,
+      body.compact #tab-activity .focusbar,
+      body.compact #tab-activity .feed-note,
+      body.compact #tab-activity .roster,
+      body.compact #tab-activity .grid3 {
+        max-width: 68rem;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      body.compact .e-top {
+        gap: 0.75rem;
+        padding: 0.625rem 0.875rem 0.4375rem;
+        align-items: center;
+      }
+      body.compact .ico {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.9375rem;
+      }
+      /* Headline left, time hard right, on one line across the full width. */
+      body.compact .e-head {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+      }
+      body.compact .e-title {
+        font-size: 1.0625rem;
+        line-height: 1.3;
+        flex: 1;
+        min-width: 0;
+      }
+      body.compact .e-when {
+        font-size: 0.8125rem;
+        margin-top: 0;
+        flex: none;
+        white-space: nowrap;
+      }
+      /* Two aligned columns of label-and-value. Labels line up down each
+         column, which is what makes a record skimmable; free-flowing tiles
+         sized to their contents were tried and read as noise. */
+      body.compact .e-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 2rem;
+        row-gap: 0.25rem;
+        padding: 0.125rem 0.875rem 0.625rem;
+      }
+      @media (max-width: 56rem) {
+        body.compact .e-body {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      body.compact .kv {
+        font-size: 0.9375rem;
+        gap: 0.625rem;
+        min-width: 0;
+      }
+      body.compact .kv .k {
+        width: 7rem;
+        flex: none;
+        font-size: 0.6875rem;
+        text-align: right;
+      }
+      body.compact .kv .v {
+        overflow-wrap: anywhere;
+      }
+      body.compact .kv .v.ip {
+        font-size: 0.9375rem;
+      }
+      body.compact .entry .detail {
+        margin: 0.1875rem 0.875rem 0.625rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9375rem;
+      }
+      body.compact .cmtbox {
+        padding: 0.4375rem 0.875rem;
+      }
+      body.compact .cmtbox input {
+        padding: 0.4375rem 0.5625rem;
+        font-size: 0.875rem;
+      }
+      body.compact .cmt {
+        font-size: 0.875rem;
+      }
+      body.compact .comments {
+        padding: 0 0.875rem 0.375rem;
+      }
+
+      /* Category accents: icon tile tint + icon color */
+      .cat-security .ico {
+        color: var(--red);
+        background: rgba(255, 84, 104, 0.12);
+      }
+      .cat-destructive .ico {
+        color: var(--red);
+        background: rgba(255, 84, 104, 0.12);
+      }
+      .cat-moderation .ico {
+        color: var(--amber);
+        background: rgba(255, 180, 84, 0.12);
+      }
+      .cat-broadcast .ico {
+        color: var(--blue);
+        background: rgba(90, 169, 255, 0.12);
+      }
+      .cat-config .ico {
+        color: var(--purple);
+        background: rgba(192, 139, 255, 0.12);
+      }
+      .cat-signin .ico {
+        color: var(--green);
+        background: rgba(87, 217, 163, 0.12);
+      }
+      .cat-namechange .ico {
+        color: var(--amber);
+        background: rgba(255, 180, 84, 0.12);
+      }
+      .cat-notification .ico {
+        color: var(--orange);
+        background: rgba(255, 152, 0, 0.12);
+      }
+      .cat-other .ico {
+        color: var(--dim);
+      }
+      .cat-security .act,
+      .cat-destructive .act {
+        color: var(--red);
+      }
+      .cat-moderation .act,
+      .cat-namechange .act {
+        color: var(--amber);
+      }
+      .cat-broadcast .act {
+        color: var(--blue);
+      }
+      .cat-config .act {
+        color: var(--purple);
+      }
+      .cat-signin .act {
+        color: var(--green);
+      }
+      .cat-notification .act {
+        color: var(--orange);
+      }
+
+      /* comments */
+      .comments {
+        border-top: 1px dashed var(--line-soft);
+        margin: 0 0.8125rem;
+        padding: 0.5rem 0;
+      }
+      .cmt {
+        font-size: 0.8125rem;
+        padding: 0.3125rem 0;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .cmt .cwho {
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .cmt .cwho.dev {
+        color: var(--red);
+      }
+      .cmt .cwho.mod {
+        color: var(--orange);
+      }
+      .cmt .ctext {
+        word-break: break-word;
+        flex: 1;
+      }
+      .cmt .cwhen {
+        color: var(--dim2);
+        font-size: 0.6875rem;
+        white-space: nowrap;
+      }
+      .cmtbox {
+        display: flex;
+        gap: 0.375rem;
+        padding: 0.375rem 0.8125rem 0.75rem;
+      }
+      .cmtbox input {
+        flex: 1;
+        min-width: 0;
+        background: var(--tile);
+        border: 1px solid transparent;
+        color: var(--txt);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+        font-family: inherit;
+        outline: none;
+        border-radius: 0.3125rem;
+      }
+      .cmtbox input:focus {
+        border-color: var(--orange);
+      }
+
+      .pill {
+        font-size: 0.7188rem;
+        font-weight: bold;
+        padding: 0.25rem 0.6875rem;
+        border-radius: 1.25rem;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .pill.live {
+        background: rgba(87, 217, 163, 0.15);
+        color: var(--green);
+      }
+      .pill.perm {
+        background: rgba(255, 84, 104, 0.15);
+        color: var(--red);
+      }
+      .avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex: none;
+        border-radius: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        color: #1a1200;
+      }
+
+      /* ── Reports ── */
+      .report-card {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+      }
+      .report-card:hover {
+        border-color: var(--line);
+      }
+      .report-card.hot {
+        border-color: var(--red);
+      }
+      .rc-head {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        flex-wrap: wrap;
+        padding: 0.9375rem 1.0625rem;
+      }
+      .rc-head .avatar {
+        width: 2.875rem;
+        height: 2.875rem;
+        font-size: 1.1875rem;
+        border-radius: 0.5rem;
+      }
+      .rc-id {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .rc-kicker {
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--red);
+      }
+      .rc-id .nm {
+        font-size: 1.1875rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+        line-height: 1.2;
+      }
+      .rc-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--dim2);
+      }
+      .rbadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3125rem;
+        font-size: 0.7188rem;
+        font-weight: bold;
+        padding: 0.1875rem 0.625rem;
+        border-radius: 1.25rem;
+        white-space: nowrap;
+      }
+      .rbadge.count {
+        background: rgba(255, 84, 104, 0.16);
+        color: var(--red);
+      }
+      .rbadge.warm {
+        background: rgba(255, 180, 84, 0.16);
+        color: var(--amber);
+      }
+      .rbadge.on {
+        background: rgba(87, 217, 163, 0.15);
+        color: var(--green);
+      }
+      .rbadge.off {
+        background: var(--tile);
+        color: var(--dim);
+      }
+      .rc-cats {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0 1.0625rem 0.875rem;
+      }
+      .rc-cats .lead {
+        font-size: 0.75rem;
+        color: var(--dim2);
+        margin-right: 0.125rem;
+      }
+      .ctag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 0.25rem 0.6875rem;
+        border-radius: 0.3125rem;
+        background: var(--tile);
+      }
+      .ctag .n {
+        color: var(--dim2);
+      }
+      .report-log-head {
+        padding: 0.6875rem 1.0625rem 0.5625rem;
+        border-top: 1px solid var(--line-soft);
+        font-size: 0.7188rem;
+        font-weight: bold;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--dim2);
+      }
+      .rlog {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem 1.0625rem;
+        border-top: 1px solid var(--line-soft);
+      }
+      .rl-av {
+        flex: none;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: var(--tile);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8125rem;
+      }
+      .rl-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .rl-top {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .rl-by {
+        font-weight: bold;
+        color: var(--txt);
+        font-size: 0.875rem;
+      }
+      .rl-said {
+        color: var(--dim2);
+        font-size: 0.8125rem;
+      }
+      .rl-cat {
+        font-size: 0.6875rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 0.125rem 0.5625rem;
+        border: 1px solid;
+        border-radius: 1.25rem;
+      }
+      .rl-when {
+        margin-left: auto;
+        color: var(--dim2);
+        font-size: 0.75rem;
+        white-space: nowrap;
+      }
+      .rl-reason {
+        color: var(--dim);
+        margin-top: 0.3125rem;
+        font-size: 0.8438rem;
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .rl-reason.none {
+        color: var(--dim2);
+        font-style: italic;
+      }
+      .rc-foot {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0.75rem 1.0625rem;
+        border-top: 1px solid var(--line-soft);
+        background: var(--tile);
+      }
+      .rc-foot .spacer {
+        flex: 1;
+      }
+      .rc-foot .note {
+        font-size: 0.7813rem;
+        color: var(--dim2);
+      }
+      .rc-discard {
+        color: var(--dim2);
+      }
+      .rc-discard:hover {
+        color: var(--red);
+        border-color: var(--red);
+      }
+      .rc-typed {
+        margin: 0 1.0625rem 0.875rem;
+        padding: 0.6875rem 0.8125rem;
+        background: var(--tile);
+        border-left: 3px solid var(--orange);
+        border-radius: 0;
+      }
+      .rc-typed .lbl {
+        display: flex;
+        align-items: center;
+        gap: 0.4375rem;
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin-bottom: 0.375rem;
+      }
+      .rc-typed .txt {
+        color: var(--txt);
+        font-size: 0.8438rem;
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+        font-family: "Courier New", monospace;
+      }
+      .rc-typed .txt.none {
+        color: var(--dim2);
+        font-style: italic;
+        font-family: inherit;
+      }
+      .rc-typed.opened {
+        margin-top: -0.375rem;
+        border-left-color: var(--dim2);
+      }
+      .rc-typed.opened .lbl {
+        color: var(--dim);
+      }
+
+      /* ── Appeals (shared by suggestions renderer) ── */
+      .appealcard {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+      }
+      .appealcard:hover {
+        border-color: var(--orange);
+      }
+      .appealcard.resolved {
+        opacity: 0.75;
+      }
+      .ap-head {
+        display: flex;
+        align-items: center;
+        gap: 0.8125rem;
+        padding: 0.875rem 1rem 0.6875rem;
+        flex-wrap: wrap;
+      }
+      .ap-head .avatar {
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1.125rem;
+        border-radius: 0.5rem;
+      }
+      .ap-id {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .ap-kicker {
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--amber);
+      }
+      .ap-id .nm {
+        font-size: 1.125rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+        line-height: 1.2;
+      }
+      .ap-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.1875rem;
+        color: var(--dim2);
+        font-size: 0.7813rem;
+      }
+      .ap-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14.375rem, 1fr));
+        gap: 0.625rem;
+        padding: 0 1rem 0.25rem;
+      }
+      .ap-box {
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.6875rem 0.8125rem;
+        margin: 0 0 0.25rem;
+      }
+      .appealcard > .ap-box {
+        margin: 0 1rem 0.25rem;
+      }
+      .ap-box.contest {
+        border-left: 3px solid var(--red);
+        border-radius: 0;
+      }
+      .ap-box .lbl {
+        display: flex;
+        align-items: center;
+        gap: 0.4375rem;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin-bottom: 0.3125rem;
+      }
+      .ap-box.contest .lbl {
+        color: var(--red);
+      }
+      /* ── The appeal conversation ──
+         The card shows the last line and a button; the conversation itself
+         opens in a modal. Inline, every arriving message re-rendered the board
+         under whoever was reading it. */
+      .ap-open {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .ap-prev {
+        font-size: 0.8125rem;
+        color: var(--dim);
+        line-height: 1.5;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      /* The modal: one scroller (the log), a composer pinned under it, and
+         the decisions where the conversation is. */
+      .apm {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+        min-height: 0;
+      }
+      .apm-log {
+        display: flex;
+        flex-direction: column;
+        height: min(52vh, 27rem);
+        overflow-y: auto;
+        padding: 0.25rem 0.375rem 0.5rem;
+        background: var(--bg);
+        border: 1px solid var(--line-soft);
+        scrollbar-width: thin;
+        scrollbar-color: var(--line) transparent;
+      }
+      .apm-log::-webkit-scrollbar {
+        width: 0.4375rem;
+      }
+      .apm-log::-webkit-scrollbar-thumb {
+        background: var(--line);
+        border-radius: 0.25rem;
+      }
+      .apm-m {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+        margin-top: 0.625rem;
+        max-width: 86%;
+      }
+      .apm-m.grouped {
+        margin-top: 0.125rem;
+      }
+      .apm-m.staff {
+        margin-left: auto;
+        flex-direction: row-reverse;
+      }
+      .apm-gut {
+        flex: none;
+        width: 1.75rem;
+      }
+      .apm-av {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        background: var(--line);
+      }
+      .apm-av.mod {
+        background: var(--blue);
+      }
+      .apm-av.dev {
+        background: var(--red);
+      }
+      .apm-av.banned {
+        background: #4a2a30;
+        color: #fff;
+      }
+      .apm-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+      }
+      .apm-m.staff .apm-stack {
+        align-items: flex-end;
+      }
+      .apm-who {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.6875rem;
+        color: var(--dim2);
+        flex-wrap: wrap;
+      }
+      .apm-m.staff .apm-who {
+        flex-direction: row-reverse;
+      }
+      .apm-name {
+        font-weight: bold;
+        color: var(--dim);
+      }
+      .apm-m.staff .apm-name {
+        color: var(--orange);
+      }
+      .chip.banned {
+        background: transparent;
+        border: 1px solid var(--red);
+        color: var(--red);
+      }
+      .apm-bub {
+        background: var(--tile);
+        color: var(--txt);
+        padding: 0.5rem 0.6875rem;
+        font-size: 0.8438rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        border-radius: 0.75rem 0.75rem 0.75rem 0.1875rem;
+        max-width: 100%;
+      }
+      .apm-m.staff .apm-bub {
+        background: #7a4d05;
+        border-radius: 0.75rem 0.75rem 0.1875rem 0.75rem;
+      }
+      .apm-m.grouped.user .apm-bub {
+        border-radius: 0.1875rem 0.75rem 0.75rem 0.1875rem;
+      }
+      .apm-m.grouped.staff .apm-bub {
+        border-radius: 0.75rem 0.1875rem 0.1875rem 0.75rem;
+      }
+      .apm-bub.clickable {
+        cursor: pointer;
+      }
+      .apm-bub.clickable:hover {
+        filter: brightness(1.18);
+      }
+      .apm-quote {
+        font-size: 0.6875rem;
+        color: rgba(255, 255, 255, 0.62);
+        border-left: 2px solid rgba(255, 255, 255, 0.3);
+        padding-left: 0.4375rem;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .apm-t {
+        color: var(--dim2);
+      }
+      /* A line written by the server, not by either side: centred, quiet, and
+         clearly not somebody's message. */
+      .apm-sys {
+        align-self: center;
+        max-width: 90%;
+        margin-top: 0.75rem;
+        padding: 0.375rem 0.75rem;
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: var(--dim2);
+        text-align: center;
+      }
+      .apm-empty {
+        align-self: center;
+        margin: auto;
+        font-size: 0.8125rem;
+        color: var(--dim2);
+      }
+      .apm-locked {
+        display: flex;
+        align-items: center;
+        gap: 0.4375rem;
+        font-size: 0.75rem;
+        color: var(--amber);
+        margin-bottom: 0.375rem;
+      }
+      .apm-closed {
+        font-size: 0.8125rem;
+        color: var(--dim2);
+        line-height: 1.5;
+      }
+      .apm-acts {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.625rem;
+        padding-top: 0.625rem;
+        border-top: 1px solid var(--line-soft);
+      }
+      .ap-waiting {
+        margin-left: auto;
+        font-size: 0.625rem;
+        font-weight: bold;
+        letter-spacing: 0.4px;
+        color: var(--amber);
+        text-transform: uppercase;
+      }
+      .ap-replybar {
+        display: flex;
+        align-items: center;
+        gap: 0.4375rem;
+        margin-top: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-left: 3px solid var(--orange);
+        font-size: 0.75rem;
+        color: var(--dim);
+      }
+      .ap-replybar-t {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ap-replybar-x {
+        background: none;
+        border: none;
+        color: var(--dim2);
+        font: inherit;
+        font-size: 0.9375rem;
+        cursor: pointer;
+        padding: 0 0.25rem;
+      }
+      .ap-comp {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .ap-input {
+        flex: 1;
+        min-width: 0;
+        background: var(--card);
+        color: var(--txt);
+        border: 1px solid var(--line);
+        border-radius: 0;
+        padding: 0.5rem 0.625rem;
+        font: inherit;
+        font-size: 0.8438rem;
+        line-height: 1.5;
+        resize: vertical;
+      }
+      .ap-input:focus {
+        outline: none;
+        border-color: var(--orange);
+      }
+      .ap-box .val {
+        color: var(--txt);
+        font-size: 0.8438rem;
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .ap-box .val.none {
+        color: var(--dim2);
+        font-style: italic;
+      }
+      .ap-foot {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--line-soft);
+        background: var(--tile);
+      }
+      .ap-barred {
+        color: var(--red);
+        font-weight: bold;
+      }
+      .ap-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        font-size: 0.7813rem;
+        color: var(--dim2);
+        flex: 1;
+        min-width: 0;
+      }
+      .ap-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.875rem;
+        margin-top: 1.125rem;
+        color: var(--dim);
+        font-size: 0.8125rem;
+      }
+
+      /* ── Applications ── */
+      .appcard {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+      }
+      .appcard:hover {
+        border-color: var(--orange);
+      }
+      .ac-head {
+        display: flex;
+        align-items: center;
+        gap: 0.8125rem;
+        padding: 0.875rem 1rem 0.6875rem;
+        flex-wrap: wrap;
+      }
+      .ac-head .avatar {
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1.125rem;
+        border-radius: 0.5rem;
+      }
+      .ac-id {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .ac-kicker {
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--dim2);
+      }
+      .ac-name {
+        font-size: 1.125rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+        line-height: 1.2;
+      }
+      .ac-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--dim2);
+      }
+      .ac-qa {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+        gap: 0.625rem;
+        padding: 0 1rem 0.25rem;
+      }
+      .qa {
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.6875rem 0.8125rem;
+      }
+      .qa-q {
+        display: flex;
+        align-items: center;
+        gap: 0.4375rem;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin-bottom: 0.3125rem;
+      }
+      .qa-a {
+        font-size: 0.8438rem;
+        color: var(--txt);
+        line-height: 1.55;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .qa-a.none {
+        color: var(--dim2);
+        font-style: italic;
+      }
+      .ac-foot {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--line-soft);
+        background: var(--tile);
+      }
+      .ac-info {
+        font-size: 0.75rem;
+        color: var(--dim2);
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .ac-info .mono {
+        color: var(--dim);
+        word-break: break-all;
+      }
+      .ac-info .ip {
+        color: var(--amber);
+      }
+      .ac-info b {
+        color: var(--txt);
+      }
+      .ac-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+
+      /* ── Moderators ── */
+      .modcard {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-left: 4px solid var(--line);
+        border-radius: 0;
+        padding: 0.875rem 1rem;
+        transition: border-color 0.15s ease;
+      }
+      .modcard:hover {
+        border-color: var(--orange);
+        border-left-color: var(--orange);
+      }
+      .modcard.rank-dev {
+        border-left-color: var(--red);
+      }
+      .modcard.rank-l3 {
+        border-left-color: var(--lead);
+      }
+      .modcard.rank-l2 {
+        border-left-color: var(--blue);
+      }
+      .modcard.rank-l1 {
+        border-left-color: var(--purple);
+      }
+      .mc-top {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .mc-title {
+        font-weight: bold;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5625rem;
+        flex-wrap: wrap;
+        min-width: 0;
+        flex: 1;
+      }
+      .rank-dev .mc-title .nm {
+        color: var(--red);
+      }
+      .rank-l3 .mc-title .nm {
+        color: var(--lead);
+      }
+      .rank-l2 .mc-title .nm {
+        color: var(--blue);
+      }
+      .rank-l1 .mc-title .nm {
+        color: var(--purple);
+      }
+      .live-dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.7188rem;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .live-dot::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .live-dot.on {
+        color: var(--green);
+      }
+      .live-dot.idle {
+        color: var(--amber);
+      }
+      .live-dot.off {
+        color: var(--dim2);
+      }
+      .mc-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5625rem 1rem;
+        margin-top: 0.75rem;
+      }
+      .mc-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        min-width: 0;
+      }
+      .mc-k {
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--dim2);
+      }
+      .mc-v {
+        font-size: 0.8438rem;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mc-v.mono {
+        font-size: 0.75rem;
+        color: var(--dim);
+      }
+      .mc-v.fresh {
+        color: var(--green);
+      }
+      .mc-v.stale {
+        color: var(--amber);
+      }
+      .mc-v.cold {
+        color: var(--red);
+      }
+      .mc-v.dim {
+        color: var(--dim2);
+      }
+      .mc-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+        padding-top: 0.6875rem;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      /* ── No longer moderators ──
+         Deliberately drained of colour: a former mod must never read like a
+         current one at a glance. The reason sits above the stats because it is
+         the thing anyone opening this list came to find out. */
+      .mods-divider {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+        padding-top: 0.875rem;
+        border-top: 1px solid var(--line);
+        color: var(--dim);
+        font-size: 0.8125rem;
+        font-weight: bold;
+      }
+      .mods-divider .md-s {
+        font-weight: normal;
+        font-size: 0.75rem;
+        color: var(--dim2);
+      }
+      .modcard.former {
+        border-left-color: var(--dim2);
+        opacity: 0.92;
+      }
+      .modcard.former:hover {
+        border-color: var(--dim);
+        border-left-color: var(--dim);
+      }
+      .modcard.former .mc-title .nm {
+        color: var(--dim);
+        text-decoration: line-through;
+        text-decoration-color: var(--dim2);
+      }
+      .chip.former {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--dim2);
+      }
+      .former-tag {
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.3px;
+        color: var(--red);
+        white-space: nowrap;
+      }
+      .former-why {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        margin-top: 0.75rem;
+        padding: 0.5rem 0.625rem;
+        background: var(--tile);
+        border-left: 2px solid var(--red);
+        border-radius: 0;
+      }
+      .former-why-k {
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--dim2);
+      }
+      .former-why-v {
+        font-size: 0.8438rem;
+        color: var(--txt);
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .former-why-v.dim {
+        color: var(--dim2);
+      }
+
+      /* ── One moderator's record (modal) ──────────────────────────────
+         There is exactly ONE scrollbar in here: the modal body. The log used
+         to be its own 46vh scroller sitting inside that body, so reading a
+         page meant driving two nested scrollbars and neither of them showed
+         you where you were. Nothing below may set overflow or a max-height. */
+      .mh-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1.125rem;
+      }
+      .mh-sect {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .mh-promote {
+        display: flex;
+        gap: 0.6875rem;
+        align-items: flex-start;
+        background: rgba(87, 217, 163, 0.1);
+        border: 1px solid rgba(87, 217, 163, 0.35);
+        border-radius: 0.3125rem;
+        padding: 0.6875rem 0.8125rem;
+      }
+      .mh-promote > i {
+        color: var(--green);
+        margin-top: 0.1875rem;
+      }
+      .mh-ptitle {
+        display: block;
+        font-weight: bold;
+        color: var(--green);
+      }
+      .mh-pbody {
+        display: block;
+        font-size: 0.7813rem;
+        color: var(--dim);
+        line-height: 1.55;
+        margin-top: 0.125rem;
+      }
+      .mh-progress {
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.625rem 0.75rem;
+      }
+      .mh-plabel {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--dim2);
+        margin-bottom: 0.375rem;
+      }
+      .mh-bar {
+        height: 0.4375rem;
+        background: var(--card);
+        border-radius: 0.25rem;
+        overflow: hidden;
+      }
+      .mh-fill {
+        height: 100%;
+        background: var(--purple);
+      }
+      /* ── Worth a look: the shape of the record, not the size of it ──
+         Severity is carried by the panel tint AND the per-flag rail, so the
+         loudest thing is obvious before a word is read. */
+      .mh-flags {
+        border-radius: 0.3125rem;
+        padding: 0.6875rem 0.8125rem;
+        background: rgba(141, 141, 141, 0.07);
+        border: 1px solid rgba(141, 141, 141, 0.3);
+      }
+      .mh-flags.look {
+        background: rgba(255, 180, 84, 0.08);
+        border-color: rgba(255, 180, 84, 0.3);
+      }
+      .mh-flags.concern {
+        background: rgba(255, 84, 104, 0.09);
+        border-color: rgba(255, 84, 104, 0.38);
+      }
+      .mh-flags.clear {
+        background: rgba(87, 217, 163, 0.07);
+        border-color: rgba(87, 217, 163, 0.28);
+      }
+      .mh-fhead {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .mh-fhead > i,
+      .mh-ftitle {
+        color: var(--dim2);
+      }
+      .mh-flags.look .mh-fhead > i,
+      .mh-flags.look .mh-ftitle {
+        color: var(--amber);
+      }
+      .mh-flags.concern .mh-fhead > i,
+      .mh-flags.concern .mh-ftitle {
+        color: var(--red);
+      }
+      .mh-flags.clear .mh-fhead > i,
+      .mh-flags.clear .mh-ftitle {
+        color: var(--green);
+      }
+      .mh-ftitle {
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .mh-flag {
+        padding: 0.5rem 0 0.5rem 0.6875rem;
+        border-left: 2px solid var(--dim2);
+        margin-bottom: 0.5rem;
+      }
+      .mh-flag.look {
+        border-left-color: var(--amber);
+      }
+      .mh-flag.concern {
+        border-left-color: var(--red);
+      }
+      .mh-flag.reviewed {
+        border-left-color: var(--line-soft);
+        opacity: 0.72;
+      }
+      .mh-flag:last-child {
+        margin-bottom: 0;
+      }
+      /* Severity word first, so the row is scannable without reading it. */
+      .mh-fhrow {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .mh-flevel {
+        flex: none;
+        font-size: 0.5938rem;
+        font-weight: bold;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        padding: 0.0625rem 0.375rem;
+        border-radius: 0.1875rem;
+        border: 1px solid currentColor;
+        color: var(--dim2);
+      }
+      .mh-flevel.look {
+        color: var(--amber);
+      }
+      .mh-flevel.concern {
+        color: var(--red);
+      }
+      .mh-flevel.reviewed {
+        color: var(--green);
+      }
+      .mh-fname {
+        font-size: 0.8125rem;
+        font-weight: bold;
+        color: var(--txt);
+      }
+      .mh-fbody {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--dim);
+        line-height: 1.55;
+        margin-top: 0.1875rem;
+      }
+      /* The reader needs to know what they are checking FOR, not just what
+         tripped. Without this line a flag is only an accusation. */
+      .mh-finnocent {
+        display: block;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        line-height: 1.5;
+        margin-top: 0.25rem;
+        font-style: italic;
+      }
+      .mh-freviewed {
+        display: block;
+        font-size: 0.7188rem;
+        color: var(--green);
+        margin-top: 0.3125rem;
+      }
+      .mh-flag.concern .mh-freviewed {
+        color: var(--amber);
+      }
+      .mh-factions {
+        display: flex;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+      }
+      .mh-fbtn {
+        appearance: none;
+        background: var(--tile);
+        border: 1px solid var(--line-soft);
+        color: var(--dim);
+        border-radius: 0.1875rem;
+        padding: 0.25rem 0.5625rem;
+        font-size: 0.7188rem;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .mh-fbtn:hover {
+        color: var(--txt);
+        border-color: var(--orange);
+      }
+      .mh-fmore {
+        margin-top: 0.625rem;
+        border-top: 1px solid var(--line-soft);
+        padding-top: 0.5rem;
+      }
+      .mh-fmore > summary {
+        font-size: 0.75rem;
+        color: var(--dim2);
+        cursor: pointer;
+        list-style: revert;
+      }
+      .mh-fmore > summary:hover {
+        color: var(--txt);
+      }
+      .mh-fmore .mh-flag {
+        margin-top: 0.5rem;
+      }
+
+      /* ── Evidence: the rows the flag was actually built from ── */
+      .mh-ev {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed var(--line-soft);
+      }
+      .mh-evrow {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        background: var(--card);
+        border-radius: 0.1875rem;
+        padding: 0.3125rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      .mh-evwhen {
+        flex: none;
+        width: 4rem;
+        color: var(--dim2);
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-evmain {
+        flex: 1;
+        min-width: 0;
+      }
+      .mh-evtop {
+        display: flex;
+        align-items: baseline;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+      }
+      .mh-evact {
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mh-evroom,
+      .mh-evnote {
+        display: block;
+        font-size: 0.6875rem;
+        color: var(--dim2);
+        word-break: break-word;
+      }
+      .mh-evnote {
+        color: var(--dim);
+      }
+      /* The gap between two actions is the whole argument, so it is a column
+         of its own rather than being buried in a sentence. */
+      .mh-evgap {
+        flex: none;
+        color: var(--amber);
+        font-size: 0.6875rem;
+        font-weight: bold;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .mh-groups {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 0.625rem;
+      }
+      .mh-group {
+        background: var(--tile);
+        border-radius: 0;
+        padding: 0.625rem 0.75rem;
+        border-left: 2px solid transparent;
+      }
+      .mh-group.g-users {
+        border-left-color: var(--red);
+      }
+      .mh-group.g-queues {
+        border-left-color: var(--blue);
+      }
+      .mh-group.g-rooms {
+        border-left-color: var(--amber);
+      }
+      .mh-group.g-admin {
+        border-left-color: var(--purple);
+      }
+      .mh-group.g-passive {
+        opacity: 0.6;
+      }
+      .mh-gblurb {
+        display: block;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        line-height: 1.5;
+        margin: -0.25rem 0 0.5rem;
+      }
+      .mh-ghead {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .mh-gname {
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--orange);
+      }
+      .mh-group.g-passive .mh-gname {
+        color: var(--dim2);
+      }
+      .mh-gn {
+        font-size: 0.9375rem;
+        font-weight: bold;
+        color: var(--txt);
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-lhead {
+        display: flex;
+        align-items: baseline;
+        gap: 0.625rem;
+        border-bottom: 1px solid var(--line-soft);
+        padding-bottom: 0.4375rem;
+      }
+      .mh-lt {
+        font-size: 0.8125rem;
+        font-weight: bold;
+        color: var(--txt);
+      }
+      .mh-ls {
+        font-size: 0.75rem;
+        color: var(--dim2);
+      }
+      /* Action, then who it landed on, then the time hard right. The target
+         used to be buried in a run-on meta line below, which is why nobody
+         could tell from a page of log who had actually been moderated. */
+      .mh-top {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4375rem;
+        flex-wrap: wrap;
+      }
+      .mh-arrow {
+        font-size: 0.625rem;
+        color: var(--dim2);
+      }
+      .mh-top .uref {
+        font-weight: bold;
+      }
+      .mh-top .mh-when {
+        margin-left: auto;
+        padding-left: 0.5rem;
+      }
+      .mh-none {
+        display: block;
+        color: var(--dim2);
+        font-size: 0.8125rem;
+        padding: 0.875rem 0;
+        text-align: center;
+      }
+      .mh-meta .k {
+        color: var(--dim2);
+      }
+      .mh-meta .v {
+        color: var(--dim);
+      }
+      .mh-meta .ipv {
+        color: var(--amber);
+        font-family: "Courier New", monospace;
+      }
+      .mh-in {
+        color: var(--dim);
+      }
+      .mh-in > i {
+        font-size: 0.6875rem;
+        opacity: 0.7;
+      }
+      /* The "(was Old Name)" half of a rename, off the headline and onto its
+         own chip so the action itself stays readable. */
+      .mh-was {
+        color: var(--dim2);
+        background: var(--tile);
+        border-radius: 0.1875rem;
+        padding: 0.0625rem 0.375rem;
+        font-size: 0.7188rem;
+      }
+
+      /* ── Who they acted on ── */
+      .mh-tlist {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .mh-trow {
+        display: flex;
+        align-items: center;
+        gap: 0.6875rem;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.4375rem 0.6875rem;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .mh-trow:hover {
+        border-color: var(--line-soft);
+      }
+      .mh-trow.on {
+        border-color: var(--orange);
+      }
+      .mh-tn {
+        flex: none;
+        min-width: 2rem;
+        font-size: 0.9375rem;
+        font-weight: bold;
+        color: var(--orange);
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-twho {
+        flex: 1;
+        min-width: 0;
+      }
+      .mh-tname {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mh-tacts {
+        display: block;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        word-break: break-word;
+      }
+      .mh-tbar {
+        flex: none;
+        width: 5.5rem;
+        height: 0.3125rem;
+        background: var(--card);
+        border-radius: 0.25rem;
+        overflow: hidden;
+      }
+      .mh-tfill {
+        height: 100%;
+        background: var(--red);
+      }
+
+      /* ── Log filters: sticky against the ONE scrollbar (the modal body) ── */
+      .mh-filters {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin: 0 -1.125rem;
+        padding: 0.5rem 1.125rem 0.5625rem;
+        background: #202020;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .mh-fchip {
+        appearance: none;
+        background: var(--tile);
+        border: 1px solid transparent;
+        color: var(--dim);
+        border-radius: 1rem;
+        padding: 0.25rem 0.6875rem;
+        font-size: 0.7188rem;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .mh-fchip:hover {
+        border-color: var(--line-soft);
+        color: var(--txt);
+      }
+      .mh-fchip.on {
+        background: var(--orange);
+        color: #000;
+        font-weight: bold;
+      }
+      .mh-fchip.clear {
+        background: var(--red);
+        color: #fff;
+      }
+      /* A burst of thirty actions inside one minute should look like a burst,
+         not like thirty rows all saying "5h ago". */
+      .mh-day {
+        display: block;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--dim2);
+        padding: 0.5rem 0 0.125rem;
+      }
+      .mh-day:first-child {
+        padding-top: 0;
+      }
+      .mh-pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        font-size: 0.7813rem;
+        color: var(--dim);
+      }
+      .mh-sum {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .mh-tot {
+        flex: 1 1 7.5rem;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.625rem 0.75rem;
+      }
+      /* Work done on users is the headline. Everything else is context, and
+         giving them all equal weight is what let a record made of room renames
+         read as a busy moderator. */
+      .mh-tot.lead {
+        flex: 1 1 10rem;
+        background: rgba(255, 152, 0, 0.1);
+        border: 1px solid rgba(255, 152, 0, 0.32);
+      }
+      .mh-tot.lead .mh-n {
+        font-size: 1.75rem;
+      }
+      .mh-tot.lead .mh-l {
+        color: var(--orange);
+      }
+      .mh-n {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: var(--orange);
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-l {
+        display: block;
+        font-size: 0.6875rem;
+        color: var(--dim2);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .mh-counts {
+        display: flex;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.875rem;
+      }
+      .mh-chip {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.375rem;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.3125rem 0.625rem;
+        font-size: 0.7813rem;
+      }
+      .mh-chip .n {
+        font-weight: bold;
+        color: var(--txt);
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-chip .a {
+        color: var(--dim);
+      }
+      /* No max-height and no overflow here on purpose - see .mh-wrap. */
+      .mh-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+      }
+      .mh-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.625rem;
+        background: var(--card);
+        border-radius: 0.3125rem;
+        padding: 0.5625rem 0.6875rem;
+      }
+      .mh-row .ico {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.8125rem;
+      }
+      /* The row icon carries its own tint here: unlike the activity feed the
+         class sits ON the .ico, not on an ancestor. */
+      .mh-row .ico.g-users {
+        color: var(--red);
+        background: rgba(255, 84, 104, 0.12);
+      }
+      .mh-row .ico.g-queues {
+        color: var(--blue);
+        background: rgba(90, 169, 255, 0.12);
+      }
+      .mh-row .ico.g-rooms {
+        color: var(--amber);
+        background: rgba(255, 180, 84, 0.12);
+      }
+      .mh-row .ico.g-records {
+        color: var(--green);
+        background: rgba(87, 217, 163, 0.12);
+      }
+      .mh-row .ico.g-admin {
+        color: var(--purple);
+        background: rgba(192, 139, 255, 0.12);
+      }
+      .mh-row .ico.g-talking {
+        color: var(--blue);
+        background: rgba(90, 169, 255, 0.12);
+      }
+
+      /* ── Record v3: header, evidence, cases ── */
+      .mh-head {
+        display: flex;
+        gap: 0.875rem;
+        align-items: flex-start;
+      }
+      .mh-avatar {
+        flex: none;
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--tile);
+        border: 1px solid var(--line-soft);
+        color: var(--orange);
+        font-size: 1.25rem;
+        font-weight: bold;
+      }
+      .mh-htext {
+        flex: 1;
+        min-width: 0;
+      }
+      .mh-hname {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .mh-hlabel {
+        font-size: 1.0625rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mh-rank {
+        font-size: 0.625rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 0.0625rem 0.375rem;
+        border: 1px solid currentColor;
+        color: var(--dim2);
+      }
+      .mh-rank.r-l1 {
+        color: var(--purple);
+      }
+      .mh-rank.r-l2 {
+        color: var(--blue);
+      }
+      .mh-rank.r-l3 {
+        color: #4ade80;
+      }
+      .mh-rank.r-dev,
+      .mh-rank.r-blocked {
+        color: var(--red);
+      }
+      .mh-rank.r-evader {
+        color: var(--amber);
+      }
+      .mh-hsummary {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.8438rem;
+        color: var(--txt);
+        line-height: 1.5;
+      }
+      .mh-hfacts {
+        display: flex;
+        gap: 0.875rem;
+        flex-wrap: wrap;
+        margin-top: 0.25rem;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+      }
+      .mh-quality {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.5rem;
+      }
+      .mh-qt {
+        background: var(--tile);
+        border: 1px solid transparent;
+        padding: 0.625rem 0.75rem;
+      }
+      .mh-qt.warn {
+        border-color: rgba(255, 180, 84, 0.5);
+      }
+      .mh-qn {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: var(--txt);
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-qt.warn .mh-qn {
+        color: var(--amber);
+      }
+      .mh-ql {
+        display: block;
+        font-size: 0.6875rem;
+        color: var(--dim2);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .mh-qteam {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.7188rem;
+        color: var(--dim);
+      }
+      .mh-qnote {
+        display: block;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        line-height: 1.5;
+      }
+      .mh-fold {
+        border-top: 1px solid var(--line-soft);
+        padding-top: 0.5rem;
+      }
+      .mh-fold > summary {
+        display: flex;
+        align-items: baseline;
+        gap: 0.625rem;
+        cursor: pointer;
+        list-style: none;
+        padding: 0.25rem 0;
+      }
+      .mh-fold > summary::-webkit-details-marker {
+        display: none;
+      }
+      .mh-fold > summary::before {
+        content: "+";
+        color: var(--dim2);
+        font-weight: bold;
+        width: 0.75rem;
+      }
+      .mh-fold[open] > summary::before {
+        content: "\2013";
+      }
+      .mh-fold > summary:hover .mh-lt {
+        color: var(--orange);
+      }
+      .mh-fold > *:not(summary) {
+        margin-top: 0.625rem;
+      }
+      .mh-cfilters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+      }
+      .mc-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .mc-case {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        padding: 0.625rem 0.75rem;
+        cursor: pointer;
+      }
+      .mc-case:hover,
+      .mc-case.open {
+        border-color: var(--dim2);
+      }
+      .mc-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .mc-who {
+        display: flex;
+        align-items: baseline;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        font-weight: bold;
+        color: var(--txt);
+      }
+      .mc-aka {
+        font-size: 0.6875rem;
+        font-weight: normal;
+        color: var(--dim2);
+        background: var(--tile);
+        padding: 0.0625rem 0.375rem;
+      }
+      .mc-meta {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+      }
+      .mc-room::before {
+        content: "in ";
+      }
+      .mc-when {
+        font-variant-numeric: tabular-nums;
+      }
+      .mc-ladder {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+      }
+      .mc-then {
+        font-size: 0.6875rem;
+        color: var(--dim2);
+      }
+      .mc-step {
+        font-size: 0.75rem;
+        color: var(--txt);
+        background: var(--tile);
+        padding: 0.1875rem 0.5rem;
+      }
+      .mc-step.heavy {
+        color: var(--red);
+        border: 1px solid rgba(255, 84, 104, 0.4);
+      }
+      .mc-step.other {
+        color: var(--dim);
+        border: 1px dashed var(--line-soft);
+        background: transparent;
+      }
+      .mh-cases.mine .mc-step.other,
+      .mh-cases.mine .mc-step.other + .mc-then {
+        display: none;
+      }
+      .mh-outcome {
+        margin-left: auto;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: var(--dim2);
+        border: 1px solid currentColor;
+        padding: 0.0625rem 0.375rem;
+      }
+      .mh-outcome.o-overturned,
+      .mh-outcome.o-evaded {
+        color: var(--red);
+      }
+      .mh-outcome.o-appeal-open,
+      .mh-outcome.o-re-actioned,
+      .mh-outcome.o-came-back {
+        color: var(--amber);
+      }
+      .mh-outcome.o-quiet,
+      .mh-outcome.o-upheld {
+        color: var(--green);
+      }
+      .mc-quote,
+      .mh-receipt {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+      }
+      .mc-q,
+      .mh-quote {
+        font-size: 0.7813rem;
+        color: var(--txt);
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .mh-grade {
+        flex: none;
+        font-size: 0.625rem;
+        font-weight: bold;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        padding: 0.0625rem 0.375rem;
+        border: 1px solid currentColor;
+        color: var(--dim2);
+      }
+      .mh-grade.g-corroborated {
+        color: var(--green);
+      }
+      .mh-grade.g-reported {
+        color: var(--blue);
+      }
+      .mh-grade.g-contradicted {
+        color: var(--amber);
+      }
+      .mh-grade.g-none {
+        border-style: dashed;
+      }
+      .mc-why {
+        display: block;
+        margin-top: 0.375rem;
+        font-size: 0.75rem;
+        color: var(--dim);
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .mc-missing {
+        display: inline-block;
+        margin-top: 0.375rem;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        color: var(--red);
+      }
+      .mc-notes:empty {
+        display: none;
+      }
+      .mc-note {
+        margin-top: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        background: var(--tile);
+        font-size: 0.75rem;
+        line-height: 1.5;
+      }
+      .mc-note .k {
+        display: block;
+        font-size: 0.6563rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--dim2);
+      }
+      .mc-note .v {
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mc-body {
+        margin-top: 0.625rem;
+        border-top: 1px solid var(--line-soft);
+        padding-top: 0.5rem;
+        cursor: default;
+      }
+      .mc-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+      }
+      .mc-sdetail {
+        background: var(--tile);
+        padding: 0.5rem 0.625rem;
+      }
+      .mc-shead {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        font-size: 0.7813rem;
+      }
+      .mc-sact {
+        font-weight: bold;
+        color: var(--txt);
+      }
+      .mc-sact.heavy {
+        color: var(--red);
+      }
+      .mc-sby,
+      .mc-swhen {
+        color: var(--dim2);
+      }
+      .mc-facts {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        margin-top: 0.375rem;
+      }
+      .mc-fact {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
+      }
+      .mc-fact .k {
+        flex: none;
+        width: 10rem;
+        color: var(--dim2);
+      }
+      .mc-fact .v {
+        color: var(--txt);
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .mc-none {
+        display: block;
+        margin-top: 0.375rem;
+        font-size: 0.75rem;
+        color: var(--dim2);
+      }
+      .mc-actions {
+        display: flex;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+      }
+      .writeup {
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.625rem;
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+      }
+      .mc-sdetail .writeup {
+        background: var(--bg);
+      }
+      .wu-line {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--txt);
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .wu-line + .wu-line {
+        margin-top: 0.125rem;
+      }
+      .mh-folded {
+        display: block;
+        padding: 0;
+      }
+      .mh-folded > summary {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.625rem;
+        padding: 0.5625rem 0.6875rem;
+        cursor: pointer;
+        list-style: none;
+      }
+      .mh-folded > summary::-webkit-details-marker {
+        display: none;
+      }
+      .mh-inner {
+        padding: 0 0.6875rem 0.5625rem 2.5rem;
+      }
+      .mh-inner .mh-row {
+        background: var(--tile);
+      }
+      .mh-plist {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .mh-prow {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        background: var(--tile);
+        padding: 0.4375rem 0.6875rem;
+        font-size: 0.75rem;
+      }
+      .mh-ptext {
+        flex: 1;
+        min-width: 0;
+      }
+      .mh-pmain {
+        display: block;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mh-psub {
+        display: block;
+        color: var(--dim2);
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .mh-tname .mc-aka {
+        margin-left: 0.375rem;
+      }
+      .uref.pref {
+        cursor: pointer;
+      }
+      .kv .v.quote {
+        color: var(--txt);
+        white-space: pre-wrap;
+      }
+      .kv .v.warnv {
+        color: var(--red);
+      }
+      .kv .v[class*="grade-"] {
+        color: var(--dim);
+      }
+      .kv .v.grade-corroborated {
+        color: var(--green);
+      }
+      .kv .v.grade-contradicted {
+        color: var(--amber);
+      }
+      .kv .v .writeup {
+        margin-top: 0;
+      }
+
+      /* ── Record tabs, the snapshot paragraph, the help page ── */
+      .mh-tabs {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        display: flex;
+        gap: 0.25rem;
+        margin: 0 -1.125rem;
+        padding: 0.5rem 1.125rem 0;
+        background: #202020;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .mh-tab {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        color: var(--dim);
+        padding: 0.4375rem 0.75rem;
+        font-size: 0.8125rem;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.375rem;
+      }
+      .mh-tab:hover {
+        color: var(--txt);
+      }
+      .mh-tab.on {
+        color: var(--orange);
+        border-bottom-color: var(--orange);
+        font-weight: bold;
+      }
+      .mh-tabn {
+        font-size: 0.6875rem;
+        font-weight: normal;
+        color: var(--dim2);
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-tab.on .mh-tabn {
+        color: var(--orange);
+      }
+      .mh-tabbed {
+        display: flex;
+        flex-direction: column;
+        gap: 1.125rem;
+      }
+      .mh-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 1.125rem;
+      }
+      .mh-pane[hidden] {
+        display: none;
+      }
+      .mh-pane .mh-filters {
+        top: 2.5rem;
+      }
+      .mh-snaptext {
+        display: block;
+        font-size: 0.8125rem;
+        color: var(--txt);
+        line-height: 1.6;
+      }
+      .mh-snapbar {
+        display: flex;
+        height: 0.5rem;
+        background: var(--tile);
+        overflow: hidden;
+      }
+      .mh-snapseg.g-corroborated {
+        background: var(--green);
+      }
+      .mh-snapseg.g-reported {
+        background: var(--blue);
+      }
+      .mh-snapseg.g-unverifiable {
+        background: var(--dim2);
+      }
+      .mh-snapseg.g-contradicted {
+        background: var(--amber);
+      }
+      .mh-snaplegend {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        font-size: 0.7188rem;
+        color: var(--dim);
+      }
+      .mh-snapkey::before {
+        content: "";
+        display: inline-block;
+        width: 0.5rem;
+        height: 0.5rem;
+        margin-right: 0.375rem;
+        background: var(--dim2);
+      }
+      .mh-snapkey.g-corroborated::before {
+        background: var(--green);
+      }
+      .mh-snapkey.g-reported::before {
+        background: var(--blue);
+      }
+      .mh-snapkey.g-contradicted::before {
+        background: var(--amber);
+      }
+      .rh-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .rh-title {
+        display: block;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin-bottom: 0.375rem;
+      }
+      .rh-p {
+        display: block;
+        font-size: 0.8125rem;
+        color: var(--txt);
+        line-height: 1.6;
+      }
+      .rh-p + .rh-p {
+        margin-top: 0.5rem;
+      }
+      .rh-list {
+        margin: 0;
+        padding-left: 1.125rem;
+        font-size: 0.8125rem;
+        color: var(--txt);
+        line-height: 1.6;
+      }
+      .rh-list li + li {
+        margin-top: 0.25rem;
+      }
+      .rh-term {
+        font-weight: bold;
+        color: var(--orange);
+      }
+      .ap-file {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .ap-file-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+        flex-wrap: wrap;
+        font-size: 0.75rem;
+        line-height: 1.5;
+      }
+      .ap-file-when {
+        flex: none;
+        color: var(--dim2);
+        font-variant-numeric: tabular-nums;
+      }
+      .ap-file-act {
+        font-weight: bold;
+        color: var(--txt);
+      }
+      .ap-file-by {
+        color: var(--dim);
+      }
+      .ap-file-q {
+        flex-basis: 100%;
+        color: var(--dim);
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .ap-file-none {
+        color: var(--dim2);
+        font-size: 0.75rem;
+      }
+      @media (max-width: 640px) {
+        .mh-tabs {
+          flex-wrap: wrap;
+        }
+      }
+      @media (max-width: 640px) {
+        .mc-fact {
+          flex-direction: column;
+          gap: 0;
+        }
+        .mc-fact .k {
+          width: auto;
+        }
+        .mh-outcome {
+          margin-left: 0;
+        }
+      }
+      .mh-row .ico.g-passive,
+      .mh-row .ico.g-other {
+        color: var(--dim2);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .mh-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .mh-act {
+        font-size: 0.8438rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .mh-det {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--dim2);
+        word-break: break-word;
+      }
+      /* Real gaps instead of the runs of "  in  " and "  from  " that used to
+         hold this line together. */
+      .mh-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 0.6875rem;
+        font-size: 0.75rem;
+        color: var(--dim2);
+        margin-top: 0.1875rem;
+        word-break: break-word;
+      }
+      .mh-det {
+        color: var(--dim);
+        margin-top: 0.125rem;
+        font-style: italic;
+      }
+      .mh-when {
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .mh-note {
+        display: block;
+        margin-top: 0.625rem;
+        font-size: 0.75rem;
+        color: var(--dim2);
+        text-align: center;
+      }
+
+      /* ── Ban list: a table, not cards ──────────────────────────────────
+         One person is one fixed-height row, so somebody with thirty blocks
+         takes no more room than somebody with one, and 20+ bans stay
+         scannable. Their blocks open in a detail panel underneath. */
+      /* Square: every row wears a duration strip on its left edge. */
+      .bantable {
+        border: 1px solid var(--line-soft);
+        border-radius: 0;
+        overflow: hidden;
+      }
+      .banhead,
+      .banrow {
+        display: grid;
+        grid-template-columns: 1.625rem 2.5rem minmax(0, 1fr) minmax(0, 13.125rem)
+          6.875rem 5.125rem 8rem;
+        align-items: center;
+        gap: 0.625rem;
+      }
+      .banhead {
+        padding: 0.5625rem 0.875rem;
+        background: var(--tile);
+        font-size: 0.6563rem;
+        font-weight: bold;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--dim2);
+      }
+      .banrow {
+        width: 100%;
+        text-align: left;
+        appearance: none;
+        background: var(--card);
+        border: none;
+        border-top: 1px solid var(--line-soft);
+        border-left: 3px solid var(--amber);
+        color: var(--txt);
+        font-family: inherit;
+        padding: 0.625rem 0.875rem 0.625rem 0.6875rem;
+        cursor: pointer;
+        transition: background-color 0.12s ease;
+      }
+      .banrow.perm {
+        border-left-color: var(--red);
+      }
+      .banrow:hover {
+        background: var(--tile);
+      }
+      .banrow.open {
+        background: var(--tile);
+      }
+      .br-chev {
+        color: var(--dim2);
+        font-size: 0.6875rem;
+        transition: transform 0.15s ease;
+      }
+      .banrow.open .br-chev {
+        transform: rotate(90deg);
+        color: var(--orange);
+      }
+      .br-av {
+        width: 2.125rem;
+        height: 2.125rem;
+        font-size: 0.875rem;
+        border-radius: 0.3125rem;
+      }
+      .br-who {
+        min-width: 0;
+      }
+      .br-name {
+        display: block;
+        font-size: 0.9063rem;
+        font-weight: bold;
+        color: var(--txt);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .br-sub {
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .br-blocks {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+      .br-count {
+        font-size: 0.9375rem;
+        font-weight: bold;
+        color: var(--txt);
+        font-variant-numeric: tabular-nums;
+      }
+      .br-unit {
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        margin-right: 0.125rem;
+      }
+      .br-by,
+      .br-when {
+        font-size: 0.7813rem;
+        color: var(--dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .br-when {
+        color: var(--dim2);
+        font-variant-numeric: tabular-nums;
+      }
+      .br-ends {
+        justify-self: end;
+      }
+      .bandetail {
+        background: var(--bg);
+        border-top: 1px solid var(--line-soft);
+        padding: 0.75rem 0.875rem 0.375rem 2.5rem;
+      }
+      .bandetail-foot {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0 0 0.625rem;
+      }
+      /* The card-era boxes are reused inside the panel, minus their card gutters */
+      .bandetail .blocks,
+      .bandetail .bc-msg,
+      .bandetail .bc-idline {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+      }
+      .bandetail .bc-msg {
+        padding: 0.5625rem 0.75rem;
+      }
+      .bandetail .blocks {
+        max-height: 25rem;
+        overflow-y: auto;
+        padding-bottom: 0;
+      }
+      .bantotal {
+        padding: 0.5625rem 0.875rem;
+        background: var(--tile);
+        border-top: 1px solid var(--line-soft);
+        font-size: 0.75rem;
+        color: var(--dim2);
+        text-align: right;
+      }
+      /* Drop the least useful columns first as space runs out */
+      @media (max-width: 67.5rem) {
+        .banhead,
+        .banrow {
+          grid-template-columns: 1.625rem 2.5rem minmax(0, 1fr) minmax(0, 11.875rem) 5.125rem 8rem;
+        }
+        .banhead > :nth-child(5),
+        .br-by {
+          display: none;
+        }
+      }
+      @media (max-width: 48.75rem) {
+        .banhead {
+          display: none;
+        }
+        .banrow {
+          grid-template-columns: 1.375rem 2.125rem minmax(0, 1fr) auto;
+          gap: 0.5rem;
+        }
+        .br-when {
+          display: none;
+        }
+        .br-blocks {
+          grid-column: 3;
+          grid-row: 2;
+        }
+        .br-ends {
+          grid-row: 1;
+        }
+        .bandetail {
+          padding-left: 0.875rem;
+        }
+      }
+
+      /* ── Ban list (legacy card styles, still used by the detail panel) ── */
+      .bancard {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-left: 4px solid var(--amber);
+        border-radius: 0;
+        overflow: hidden;
+        transition: border-color 0.15s ease;
+      }
+      .bancard:hover {
+        border-color: var(--orange);
+      }
+      .bancard.perm {
+        border-left-color: var(--red);
+      }
+      .bc-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.8125rem 0.9375rem 0.625rem;
+      }
+      .bc-head .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        font-size: 1.0625rem;
+      }
+      .bc-id {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+        flex: 1;
+      }
+      .bc-name {
+        font-size: 1rem;
+        font-weight: bold;
+        color: var(--txt);
+        word-break: break-word;
+        line-height: 1.25;
+      }
+      .bc-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.3125rem 0.75rem;
+        flex-wrap: wrap;
+        font-size: 0.75rem;
+        color: var(--dim2);
+      }
+      .bc-meta b {
+        color: var(--dim);
+      }
+      /* One block entry inside a person's ban card */
+      .blocks {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        padding: 0 0.9375rem 0.6875rem;
+      }
+      .blockrow {
+        display: flex;
+        align-items: center;
+        gap: 0.5625rem;
+        flex-wrap: wrap;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.5rem 0.625rem;
+        font-size: 0.7813rem;
+      }
+      .blockrow .addr {
+        font-family: "Courier New", monospace;
+        color: var(--amber);
+        word-break: break-all;
+        min-width: 0;
+        flex: 1;
+      }
+      .blockrow .addr.dim {
+        color: var(--dim2);
+        font-family: inherit;
+        font-style: italic;
+      }
+      .blockrow .ibtn {
+        background: transparent;
+        border: none;
+        color: var(--dim2);
+        cursor: pointer;
+        padding: 0.25rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        transition:
+          color 0.15s ease,
+          background-color 0.15s ease;
+      }
+      .blockrow .ibtn:hover {
+        background: var(--tile-hover);
+        color: var(--orange);
+      }
+      /* Stands in for the unban button on a block this viewer cannot lift. */
+      .blockrow .ibtn.locked,
+      .blockrow .ibtn.locked:hover {
+        background: transparent;
+        color: var(--dim);
+        cursor: default;
+        opacity: 0.6;
+      }
+      .blockrow .ibtn.danger:hover {
+        color: var(--red);
+      }
+      .btag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.5938rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        padding: 0.125rem 0.4375rem;
+        border-radius: 0.25rem;
+        white-space: nowrap;
+      }
+      .btag.ip {
+        background: rgba(255, 180, 84, 0.16);
+        color: var(--amber);
+      }
+      .btag.range {
+        background: rgba(90, 169, 255, 0.16);
+        color: var(--blue);
+      }
+      .btag.uid {
+        background: rgba(192, 139, 255, 0.16);
+        color: var(--purple);
+      }
+      .bc-repeat {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3125rem;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        padding: 0.125rem 0.5625rem;
+        border-radius: 1.25rem;
+        white-space: nowrap;
+        background: rgba(255, 84, 104, 0.16);
+        color: var(--red);
+      }
+      .bc-msg {
+        margin: 0 0.9375rem 0.6875rem;
+        padding: 0.5625rem 0.75rem;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        font-size: 0.8125rem;
+        color: var(--txt);
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .bc-msg .lbl {
+        display: block;
+        font-size: 0.625rem;
+        font-weight: bold;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: var(--dim2);
+        margin-bottom: 0.25rem;
+        white-space: normal;
+      }
+      .bc-msg.none {
+        color: var(--dim2);
+        font-style: italic;
+      }
+      .bc-idline {
+        margin: 0 0.9375rem 0.6875rem;
+        font-size: 0.7188rem;
+        color: var(--dim2);
+        word-break: break-all;
+      }
+
+      /* ── Ban & unban history ── */
+      .banhist {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        overflow: hidden;
+      }
+      .bhrow {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.875rem;
+        background: var(--card);
+        border-top: 1px solid var(--line-soft);
+      }
+      .banhist .bhrow:first-child {
+        border-top: none;
+      }
+      .bhrow:hover {
+        background: var(--tile);
+      }
+      .bhrow .bh-ic {
+        width: 1.875rem;
+        height: 1.875rem;
+        flex: none;
+        border-radius: 0.3125rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8125rem;
+      }
+      .bhrow.ban .bh-ic {
+        background: rgba(255, 84, 104, 0.16);
+        color: var(--red);
+      }
+      .bhrow.unban .bh-ic {
+        background: rgba(87, 217, 163, 0.16);
+        color: var(--green);
+      }
+      .bhrow .bh-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+      }
+      .bhrow .bh-line {
+        font-size: 0.8438rem;
+        color: var(--txt);
+        word-break: break-word;
+      }
+      .bhrow .bh-line .verb-ban {
+        color: var(--red);
+        font-weight: bold;
+      }
+      .bhrow .bh-line .verb-unban {
+        color: var(--green);
+        font-weight: bold;
+      }
+      .bhrow .bh-sub {
+        font-size: 0.75rem;
+        color: var(--dim2);
+        word-break: break-word;
+        display: flex;
+        gap: 0.375rem 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .bhrow .bh-sub .ip {
+        color: var(--amber);
+        font-family: "Courier New", monospace;
+      }
+      .bhrow .bh-when {
+        font-size: 0.75rem;
+        color: var(--dim2);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .stchip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.5938rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        padding: 0.125rem 0.4375rem;
+        border-radius: 0.25rem;
+        white-space: nowrap;
+      }
+      .stchip.active {
+        background: rgba(87, 217, 163, 0.16);
+        color: var(--green);
+      }
+
+      /* ── Sessions ── */
+      .sesscard {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        padding: 0.8125rem 0.9375rem;
+        transition: border-color 0.15s ease;
+      }
+      .sesscard:hover {
+        border-color: var(--orange);
+      }
+      .sess-top {
+        display: flex;
+        align-items: center;
+        gap: 0.6875rem;
+        flex-wrap: wrap;
+      }
+      .sess-title {
+        font-weight: bold;
+        font-size: 0.9375rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5625rem;
+        flex-wrap: wrap;
+        min-width: 0;
+        flex: 1;
+      }
+      .sess-nets {
+        margin-top: 0.625rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3125rem;
+      }
+      /* Key sessions: the same cards as Moderators, with the network verdict
+         in words and the networks and devices folded away underneath. */
+      .keylegend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+        margin: 0.5rem 0 1rem;
+        font-size: 0.8125rem;
+        color: var(--dim);
+      }
+      .keylegend > div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      #tab-sessions .modcard,
+      #tab-sessions .modcard:hover {
+        border-left: 1px solid var(--line-soft);
+      }
+      #tab-sessions .modcard:hover {
+        border-color: var(--orange);
+      }
+      .pill.warn {
+        background: rgba(255, 180, 84, 0.15);
+        color: var(--amber);
+      }
+      .pill.mixed {
+        background: rgba(1, 255, 255, 0.12);
+        color: var(--cyan);
+      }
+      .pill.off {
+        background: rgba(141, 141, 141, 0.15);
+        color: var(--dim);
+      }
+      .mc-note {
+        margin-top: 0.625rem;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+        color: var(--dim);
+      }
+      .mc-details {
+        display: none;
+        margin-top: 0.75rem;
+        padding-top: 0.6875rem;
+        border-top: 1px solid var(--line-soft);
+      }
+      .modcard.open .mc-details {
+        display: block;
+      }
+      .mc-details .mc-k {
+        display: block;
+        margin: 0.5rem 0 0.375rem;
+      }
+      .mc-details .mc-k:first-child {
+        margin-top: 0;
+      }
+      .devlist {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+      }
+      .devchip {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        background: var(--tile);
+        border: 1px solid var(--line-soft);
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+        max-width: 100%;
+      }
+      .devchip .id {
+        font-family: "Courier New", monospace;
+        color: var(--amber);
+        word-break: break-all;
+      }
+      .devchip .sub {
+        color: var(--dim);
+      }
+      .netrow {
+        display: flex;
+        align-items: center;
+        gap: 0.5625rem;
+        flex-wrap: wrap;
+        background: var(--tile);
+        border-radius: 0.3125rem;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+      }
+      .netrow .net {
+        font-family: "Courier New", monospace;
+        color: var(--amber);
+        word-break: break-all;
+        min-width: 0;
+        flex: 1;
+      }
+      .netrow .cnt {
+        color: var(--dim2);
+        white-space: nowrap;
+      }
+      .netrow .lastseen {
+        color: var(--dim2);
+        white-space: nowrap;
+      }
+      .netlist {
+        flex-basis: 100%;
+        padding: 0.125rem 0 0.125rem 0.375rem;
+        display: none;
+        flex-direction: column;
+        gap: 0.125rem;
+      }
+      .netrow.open .netlist {
+        display: flex;
+      }
+      .netlist .one {
+        font-family: "Courier New", monospace;
+        font-size: 0.7188rem;
+        color: var(--dim);
+        word-break: break-all;
+      }
+      .net-expand {
+        background: transparent;
+        border: none;
+        color: var(--dim2);
+        cursor: pointer;
+        font-size: 0.6875rem;
+        font-family: inherit;
+        padding: 0.125rem 0.25rem;
+      }
+      .net-expand:hover {
+        color: var(--orange);
+      }
+
+      /* ── Guide ── */
+      .guide-intro {
+        font-size: 0.9375rem;
+        color: var(--dim);
+        line-height: 1.75;
+        margin: 0 0 0.375rem;
+        max-width: 51.25rem;
+      }
+      .guide-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(18.75rem, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+      .gcard {
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        padding: 1rem 1.0625rem;
+      }
+      .gcard h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        margin: 0 0 0.5625rem;
+        font-size: 1rem;
+        font-weight: bold;
+        color: var(--orange);
+      }
+      .gcard h3 i {
+        width: 1.25rem;
+        text-align: center;
+        font-size: 0.9375rem;
+      }
+      .gcard h3 .tag {
+        font-size: 0.625rem;
+        font-weight: bold;
+        letter-spacing: 0.4px;
+        padding: 0.125rem 0.4375rem;
+        border-radius: 0.25rem;
+        margin-left: auto;
+        background: rgba(255, 84, 104, 0.16);
+        color: var(--red);
+      }
+      .gcard p {
+        margin: 0;
+        font-size: 0.8438rem;
+        color: var(--dim);
+        line-height: 1.65;
+      }
+      .role-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+      .role-card {
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        padding: 1rem;
+        background: var(--card);
+      }
+      .role-card .rh {
+        display: flex;
+        align-items: center;
+        gap: 0.5625rem;
+        flex-wrap: wrap;
+        font-weight: bold;
+        font-size: 0.9375rem;
+        margin-bottom: 0.5rem;
+      }
+      .role-card .rh .chip {
+        margin-left: auto;
+      }
+      .role-card .rp {
+        margin: 0 0 0.625rem;
+        font-size: 0.7813rem;
+        color: var(--dim2);
+        line-height: 1.55;
+      }
+      .role-card.jr .rh {
+        color: var(--purple);
+      }
+      .role-card.full .rh {
+        color: var(--blue);
+      }
+      .role-card.lead3 .rh {
+        color: var(--lead);
+      }
+      .role-card.dev .rh {
+        color: var(--red);
+      }
+      .rc-sub {
+        margin: 0.75rem 0 0.25rem;
+        font-size: 0.6875rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--dim2);
+      }
+      .rc-sub.can {
+        color: var(--green);
+      }
+      .rc-sub.cant {
+        color: var(--red);
+      }
+      .rc-sub.sees {
+        color: var(--blue);
+      }
+      .role-card ul {
+        margin: 0;
+        padding-left: 1.125rem;
+        font-size: 0.8125rem;
+        color: var(--dim);
+        line-height: 1.7;
+      }
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(18.125rem, 1fr));
+        gap: 0.625rem;
+      }
+      .leg {
+        display: flex;
+        align-items: center;
+        gap: 0.6875rem;
+        font-size: 0.8125rem;
+        color: var(--dim);
+        background: var(--card);
+        border: 1px solid var(--line-soft);
+        border-radius: 0.3125rem;
+        padding: 0.75rem 0.875rem;
+      }
+      .leg .leg-ic {
+        width: 1.375rem;
+        text-align: center;
+        font-size: 0.9375rem;
+        flex: none;
+      }
+      .leg b {
+        color: var(--txt);
+        font-weight: bold;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 48rem) {
+        .header {
+          padding-top: 5rem;
+        }
+        .nav-back {
+          top: 1.1rem;
+          left: 1.1rem;
+        }
+        .me-chip {
+          position: static;
+          justify-content: center;
+          margin-top: 0.75rem;
+        }
+        .header h1 {
+          font-size: 1.5rem;
+        }
+        .strip .ph-actions {
+          margin-left: 0;
+          flex-basis: 100%;
+        }
+        .ac-actions {
+          margin-left: 0;
+          flex-basis: 100%;
+        }
+      }
+
+      /* ── Announcements: composing one ────────────────────────────────────
+         The preview matters more than usual here: a notice goes to everybody
+         at once, and there is no taking it back after they have read it. */
+      /* ── Rules editor ──
+         One card per rule, in the order the lobby shows them. Reordering is
+         the up/down buttons rather than drag: this list is edited rarely and
+         a drag target is one more thing to get wrong on a touch screen. */
+      .rl-card {
+        background: var(--panel, #1b1b1b);
+        border: 1px solid var(--border, #333);
+        border-radius: 8px;
+        padding: 12px 14px 14px;
+      }
+      .rl-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 9px;
+      }
+      .rl-num {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--tile, #222);
+        color: var(--orange, #ff9800);
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .rl-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .rl-field {
+        width: 100%;
+        box-sizing: border-box;
+        background: var(--bg, #141414);
+        border: 1px solid var(--border, #333);
+        border-radius: 6px;
+        color: var(--text, #eee);
+        font-family: inherit;
+        font-size: 13.5px;
+        padding: 9px 11px;
+        margin-bottom: 8px;
+        resize: vertical;
+        line-height: 1.55;
+      }
+      .rl-field:focus {
+        outline: none;
+        border-color: var(--orange, #ff9800);
+      }
+      .rl-lbl {
+        display: block;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--dim, #8a8a8a);
+        margin: 2px 0 4px;
+      }
+      .rl-lvl {
+        flex: none;
+        background: var(--bg, #141414);
+        border: 1px solid var(--border, #333);
+        border-radius: 6px;
+        color: var(--text, #eee);
+        font-family: inherit;
+        font-size: 12px;
+        padding: 5px 8px;
+        cursor: pointer;
+      }
+      .rl-dirty {
+        border-color: var(--orange, #ff9800);
+      }
+
+      .an-compose {
+        padding: 14px 16px 16px;
+        background: var(--panel, #1b1b1b);
+        border: 1px solid var(--border, #333);
+        border-radius: 8px;
+        margin-bottom: 18px;
+      }
+      .an-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .an-select,
+      .an-field {
+        background: var(--bg, #141414);
+        border: 1px solid var(--border, #333);
+        border-radius: 6px;
+        color: var(--text, #eee);
+        font-family: inherit;
+        font-size: 14px;
+        padding: 9px 11px;
+      }
+      .an-select {
+        flex: none;
+        min-width: 130px;
+        cursor: pointer;
+      }
+      .an-from { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+      .an-row .an-field {
+        flex: 1;
+        min-width: 200px;
+      }
+      .an-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        resize: vertical;
+        line-height: 1.55;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+      .an-field:focus,
+      .an-select:focus {
+        outline: none;
+        border-color: var(--accent, #ff9800);
+      }
+      .an-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .an-count {
+        margin-right: auto;
+        color: var(--muted, #999);
+        font-size: 12px;
+      }
+      .an-preview-box {
+        margin-top: 12px;
+        padding: 16px 18px;
+        background: var(--bg, #141414);
+        border: 1px dashed var(--accent, #ff9800);
+        border-radius: 8px;
+        color: var(--text, #eee);
+        font-size: 14px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      .an-preview-box > :first-child {
+        margin-top: 0;
+      }
+      .an-preview-box > :last-child {
+        margin-bottom: 0;
+      }
+      .an-preview-box h2,
+      .an-preview-box h3,
+      .an-preview-box h4 {
+        color: var(--accent, #ff9800);
+        margin: 16px 0 7px;
+      }
+      .an-preview-box h2 {
+        font-size: 18px;
+      }
+      .an-preview-box h3 {
+        font-size: 16px;
+      }
+      .an-preview-box h4 {
+        font-size: 14px;
+      }
+      .an-preview-box p {
+        margin: 0 0 10px;
+      }
+      .an-preview-box ul,
+      .an-preview-box ol {
+        margin: 0 0 10px;
+        padding-left: 22px;
+      }
+      .an-preview-box li {
+        margin-bottom: 4px;
+      }
+      .an-preview-box a {
+        color: #01ffff;
+      }
+      .an-preview-box code {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .an-preview-box pre {
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid var(--border, #333);
+        border-radius: 6px;
+        padding: 10px 12px;
+        overflow-x: auto;
+      }
+      .an-preview-box pre code {
+        background: none;
+        padding: 0;
+      }
+      .an-preview-box blockquote {
+        margin: 0 0 10px;
+        padding-left: 12px;
+        border-left: 3px solid var(--accent, #ff9800);
+        color: var(--muted, #999);
+      }
+      .an-preview-box img {
+        max-width: 100%;
+        border-radius: 6px;
+      }
+      .an-preview-box hr {
+        border: none;
+        border-top: 1px solid var(--border, #333);
+        margin: 16px 0;
+      }
+
+      /* ── Announcements: what has been posted ── */
+      .an-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .an-item {
+        padding: 12px 14px;
+        background: var(--panel, #1b1b1b);
+        border: 1px solid var(--border, #333);
+        border-radius: 8px;
+      }
+      .an-item.showing {
+        border-color: var(--accent, #ff9800);
+      }
+      .an-item-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 5px;
+      }
+      .an-item-title {
+        font-size: 15px;
+        font-weight: bold;
+        color: var(--text, #eee);
+        overflow-wrap: anywhere;
+      }
+      .an-tag {
+        flex: none;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .an-tag.update {
+        background: #6a3fb5;
+        color: #fff;
+      }
+      .an-tag.notice {
+        background: #ff9800;
+        color: #1a1a1a;
+      }
+      .an-tag.alert {
+        background: #c62828;
+        color: #fff;
+      }
+      .an-tag.live {
+        background: #2e7d32;
+        color: #fff;
+      }
+      .an-tag.hidden {
+        background: #444;
+        color: #ccc;
+      }
+      .an-item-meta {
+        color: var(--muted, #999);
+        font-size: 12px;
+      }
+      .an-item-reacts {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .an-item-react {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border: 1px solid var(--border, #333);
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--text, #eee);
+      }
+      .an-item-react b {
+        font-size: 11px;
+      }
+      .an-item-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .an-empty {
+        padding: 22px;
+        text-align: center;
+        color: var(--muted, #999);
+        font-size: 13px;
+      }
+    </style>
+      <link rel="stylesheet" href="stylesheets/notify.css?v=1.0.0" />
+      <link rel="stylesheet" href="stylesheets/info-modal.css?v=1.2.0" />
+  </head>
+  <body>
+    <!-- Loading / denied gates -->
+    <div id="loading" class="gate">
+      <div class="gate-icon"><i class="fas fa-shield-halved"></i></div>
+      <h2>Loading dashboard</h2>
+      <p>Verifying your staff key.</p>
+    </div>
+
+    <div id="denied" class="gate denied hidden">
+      <div class="gate-icon"><i class="fas fa-lock"></i></div>
+      <h2>Access denied</h2>
+      <p>This dashboard is for moderators and admins only.</p>
+      <div class="gate-actions">
+        <button id="enterKeyBtn" class="btn primary">
+          <i class="fas fa-key"></i> Enter staff key
+        </button>
+        <a class="btn" href="/index.html">
+          <i class="fas fa-arrow-left"></i> Back to lobby
+        </a>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="app" class="hidden">
+      <header class="header">
+        <a class="nav-back" href="/index.html">
+          <i class="fas fa-arrow-left"></i> Back to Lobby
+        </a>
+        <span id="meInfo" class="me-chip"></span>
+        <div class="header-content">
+          <h1><i class="fas fa-shield-halved"></i> Moderation Dashboard</h1>
+          <p>
+            Live, permanent record of every staff action and identity change.
+          </p>
+        </div>
+      </header>
+
+      <!-- Hidden nav-toggle hooks kept so the dashboard script wiring stays intact -->
+      <button
+        id="navToggle"
+        type="button"
+        class="hidden"
+        aria-hidden="true"
+      ></button>
+      <div id="navBackdrop" class="hidden" aria-hidden="true"></div>
+
+      <nav class="dash-nav">
+        <div class="dash-nav-inner">
+          <button class="nav-item active" data-tab="activity">
+            <i class="fas fa-rectangle-list"></i> Activity
+          </button>
+          <button class="nav-item" data-tab="reports">
+            <i class="fas fa-flag"></i> Reports
+            <span class="ni-badge" id="reportsBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="applications" data-lead>
+            <i class="fas fa-user-pen"></i> Applications
+            <span class="ni-badge" id="appsBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="appeals" data-min2>
+            <i class="fas fa-scale-balanced"></i> Appeals
+            <span class="ni-badge" id="appealsBadge">0</span>
+          </button>
+          <!-- Suggestions moved to the public community board in the lobby -->
+          <button class="nav-item" data-tab="bans" data-min2>
+            <i class="fas fa-ban"></i> Ban list
+            <span class="ni-badge" id="bansBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="mods">
+            <i class="fas fa-user-shield"></i> Moderators
+            <span class="ni-badge" id="modsBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="sessions">
+            <i class="fas fa-key"></i> Sessions
+            <span class="ni-badge" id="sessionsBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="links" data-dev>
+            <i class="fas fa-link"></i> Allowed links
+          </button>
+          <button class="nav-item" data-tab="announce" data-lead>
+            <i class="fas fa-bullhorn"></i> Announcements
+            <span class="ni-badge" id="announceBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="rules" data-dev>
+            <i class="fas fa-scale-balanced"></i> Rules
+          </button>
+          <button class="nav-item" data-tab="guide">
+            <i class="fas fa-circle-question"></i> Guide
+          </button>
+        </div>
+      </nav>
+
+      <main class="main-content">
+        <!-- Activity -->
+        <section id="tab-activity" class="panel active">
+          <div class="strip">
+            <i class="fas fa-rectangle-list lead"></i> Staff activity
+            <span class="sub" id="dayLabel">Today, Pacific time</span>
+          </div>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fas fa-magnifying-glass"></i>
+              <input
+                id="search"
+                class="search"
+                placeholder="Search name, action, IP, room, message, comment"
+              />
+            </div>
+            <div class="seg" id="filterSeg">
+              <button class="active" data-f="all">All</button>
+              <button data-f="action">Actions</button>
+              <button data-f="identity">Identity</button>
+              <button data-f="notification">
+                Inbox<span
+                  id="notifCount"
+                  style="
+                    display: none;
+                    background: #ff5468;
+                    color: #fff;
+                    border-radius: 8px;
+                    padding: 0 5px;
+                    font-size: 10px;
+                    margin-left: 4px;
+                  "
+                ></span>
+              </button>
+            </div>
+            <div class="seg viewseg" id="viewSeg">
+              <button data-view="roomy" title="Three columns of cards">
+                <i class="fas fa-table-cells-large"></i> Roomy
+              </button>
+              <button data-view="compact" title="One column, full records">
+                <i class="fas fa-bars"></i> Compact
+              </button>
+            </div>
+          </div>
+          <div class="daybar">
+            <span class="daybar-label">
+              <i class="fas fa-calendar-week"></i> Last 7 days
+            </span>
+            <div id="dayPicker" class="daypicker"></div>
+          </div>
+          <div id="focusBar" class="focusbar hidden"></div>
+          <div id="roster" class="roster"></div>
+          <div id="feedNote" class="feed-note hidden"></div>
+          <div id="list" class="grid3"></div>
+        </section>
+
+        <!-- Reports -->
+        <section id="tab-reports" class="panel">
+          <div class="strip">
+            <i class="fas fa-flag lead" style="color: #ff5468"></i> Reports
+            <span class="sub" id="reportsSub"
+              >Users reported by the community</span
+            >
+            <div class="ph-actions">
+              <button id="reportsRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              A report is not proof. The name at the top of each card is the
+              person being reported; the list below shows who reported them and
+              why. If a report is false, click Discard. If no action is needed,
+              keep it so the history stays and others can report this person
+              later.
+            </span>
+          </p>
+          <div id="reportsList" class="grid2"></div>
+        </section>
+
+        <!-- Applications -->
+        <section id="tab-applications" class="panel">
+          <div class="strip">
+            <i class="fas fa-user-pen lead" style="color: #28a745"></i> Mod
+            applications
+            <span class="sub" id="appsSub">
+              Active members applying to help moderate
+            </span>
+            <div class="ph-actions">
+              <button
+                id="appsToggle"
+                class="btn sm"
+                style="display: none"
+              ></button>
+              <button id="appsRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              Each card is one person applying for the junior (L1) role. Read
+              why they want to help and their availability, then approve to mint
+              and deliver their key automatically, or decline with an optional
+              private reason. Applications are never auto-accepted; a human
+              always reviews.
+              <br /><br />
+              <b>Discord counts.</b> An applicant with Discord linked shows a
+              green check. Someone who is in the Fuckomatic Discord server is
+              much likelier to be accepted, because we can reach them, and once
+              approved they get the site mod role there so they can talk to the
+              other moderators and the admins. Check the server before you
+              decide.
+            </span>
+          </p>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fas fa-magnifying-glass"></i>
+              <input
+                id="appsSearch"
+                class="search"
+                placeholder="Search applicant, reason, or availability"
+              />
+            </div>
+            <div class="seg" id="appsSeg">
+              <button class="active" data-s="pending">Pending</button>
+              <button data-s="approved">Approved</button>
+              <button data-s="rejected">Rejected</button>
+              <button data-s="all">All</button>
+            </div>
+          </div>
+          <div id="appsList" class="grid2"></div>
+        </section>
+
+        <!-- Appeals -->
+        <section id="tab-appeals" class="panel">
+          <div class="strip">
+            <i class="fas fa-scale-balanced lead" style="color: #ffb454"></i>
+            Ban appeals
+            <span class="sub" id="appealsSub">
+              Appeals submitted from the ban screen
+            </span>
+            <div class="ph-actions">
+              <div class="seg" id="appealsSeg">
+                <button class="active" data-s="active">
+                  Active<span class="n"></span>
+                </button>
+                <button data-s="approved">Approved<span class="n"></span></button>
+                <button data-s="declined">Declined<span class="n"></span></button>
+              </div>
+              <button id="appealsRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              Each card is one banned user asking to be unbanned. It shows the
+              ban they are contesting (who placed it and why) next to their
+              message. Click their name to trace their activity. Lift the ban to
+              unblock them and accept the appeal, or decline it to keep the ban.
+              Lifting a ban is admin-only. An appeal about a ban that ran out or
+              was removed closes on its own and moves to Approved.
+            </span>
+          </p>
+          <div id="appealsList" class="grid2"></div>
+        </section>
+
+        <!-- Suggestions (legacy panel; board lives in the lobby now) -->
+        <section id="tab-suggestions" class="panel">
+          <div class="strip">
+            <i class="fas fa-lightbulb lead" style="color: #ffc107"></i>
+            Suggestions
+            <span class="sub" id="suggestionsSub">
+              Feature ideas sent from the lobby
+            </span>
+            <div class="ph-actions">
+              <button id="suggestionsRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div id="suggestionsList" class="grid2"></div>
+        </section>
+
+        <!-- Bans -->
+        <section id="tab-bans" class="panel">
+          <div class="strip">
+            <i class="fas fa-ban lead" style="color: #ff5468"></i> Ban list
+            <span class="sub" id="bansSub">Active blocks placed by staff</span>
+            <div class="ph-actions">
+              <button id="banIpBtn" class="btn sm primary">
+                <i class="fas fa-plus"></i> Ban an IP or range
+              </button>
+              <button id="banIdBtn" class="btn sm">
+                <i class="fas fa-fingerprint"></i> Ban an ID
+              </button>
+              <button id="bansRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fas fa-magnifying-glass"></i>
+              <input
+                id="banSearch"
+                class="search"
+                placeholder="Search name, IP, id, staff member, or reason"
+              />
+            </div>
+            <div class="seg" id="banSeg">
+              <button class="active" data-b="all">All</button>
+              <button data-b="perm">Permanent</button>
+              <button data-b="temp">Temporary</button>
+              <button data-b="id">ID bans</button>
+            </div>
+          </div>
+          <div id="bansList" class="bantable"></div>
+
+          <div class="strip mini">
+            <i class="fas fa-clock-rotate-left lead ic-orange"></i> Ban &amp;
+            unban history
+            <span class="sub" id="banHistSub">Who banned or unbanned whom</span>
+          </div>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fas fa-magnifying-glass"></i>
+              <input
+                id="banHistSearch"
+                class="search"
+                placeholder="Search history by name, IP, id, or staff member"
+              />
+            </div>
+            <div class="seg" id="banHistSeg">
+              <button class="active" data-h="all">All</button>
+              <button data-h="ban">Bans</button>
+              <button data-h="unban">Unbans</button>
+            </div>
+          </div>
+          <div id="banHistoryList" class="banhist"></div>
+        </section>
+
+        <!-- Mods -->
+        <section id="tab-mods" class="panel">
+          <div class="strip">
+            <i class="fas fa-user-shield lead" style="color: #5aa9ff"></i>
+            Moderators
+            <span class="sub" id="modsSub">Staff roster</span>
+            <div class="ph-actions">
+              <button id="grantMod" class="btn sm primary">
+                <i class="fas fa-user-plus"></i> Grant mod
+              </button>
+              <button id="modsRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="strip mini">
+            <i class="fas fa-user-shield lead" style="color: #5aa9ff"></i> Staff
+            roster
+          </div>
+          <div class="toolbar">
+            <div class="seg" id="modsSeg">
+              <button class="active" data-m="all">Everyone</button>
+              <button data-m="dev">Admins</button>
+              <button data-m="l3">Leaders</button>
+              <button data-m="l2">Full mods</button>
+              <button data-m="l1">Junior mods</button>
+              <button data-m="active">Active</button>
+              <button data-m="inactive">Inactive</button>
+              <button data-m="former">No longer mods</button>
+            </div>
+          </div>
+          <div id="modsList" class="grid3"></div>
+        </section>
+
+        <!-- Sessions -->
+        <section id="tab-sessions" class="panel">
+          <div class="strip">
+            <i class="fas fa-key lead" style="color: #01ffff"></i> Key sessions
+            <span class="sub" id="sessionsSub">
+              Who holds which staff key, and from where
+            </span>
+            <div class="ph-actions">
+              <button id="sessionsRefresh" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="keylegend">
+            <div><span class="pill live">OK</span><span>One network.</span></div>
+            <div><span class="pill mixed">IPv4 + IPv6</span><span>One connection speaking both.</span></div>
+            <div><span class="pill warn">2 networks</span><span>Two network families in 7 days. Keep an eye on it.</span></div>
+            <div><span class="pill perm">3 networks</span><span>Three or more in 7 days. Worth a look.</span></div>
+          </div>
+          <div class="strip mini">
+            <i class="fas fa-plug lead" style="color: #57d9a3"></i> Connected now
+          </div>
+          <div id="sessionsActive" class="grid3"></div>
+          <div class="strip mini">
+            <i class="fas fa-key lead ic-orange"></i> Active keys
+            <span class="sub">Every key that works today</span>
+          </div>
+          <div id="sessionsHistory" class="grid3"></div>
+          <div class="strip mini">
+            <i class="fas fa-user-slash lead" style="color: #8d8d8d"></i> Removed keys
+            <span class="sub">Keys that no longer work, kept for the record</span>
+          </div>
+          <div id="sessionsRemoved" class="grid3"></div>
+        </section>
+
+        <!-- Announcements -->
+        <!-- Rules (dev only). Both sets are shown publicly in the lobby, so
+             this is the one editor whose output every user reads. -->
+        <section id="tab-rules" class="panel">
+          <div class="strip">
+            <i class="fas fa-scale-balanced lead ic-orange"></i> Rules
+            <span class="sub">What users agree to, and what staff are held to</span>
+            <div class="ph-actions">
+              <button id="rulesReload" class="btn sm">
+                <i class="fas fa-arrows-rotate"></i> Reload
+              </button>
+              <button id="rulesSave" class="btn sm primary">
+                <i class="fas fa-floppy-disk"></i> Save changes
+              </button>
+            </div>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              Both sets are public: anyone can open <b>Fuckomatic Rules</b> from
+              the lobby and read them, moderator rules included. That is
+              deliberate - a rule nobody outside staff can read is not one
+              anybody can hold staff to. Write each rule as one plain
+              instruction plus a short <b>why</b>; the why is what lets someone
+              apply the rule to a situation you did not write down. Changes go
+              live the moment you save.
+            </span>
+          </p>
+
+          <div class="toolbar">
+            <div class="seg" id="rulesSeg">
+              <button class="active" data-sec="community">Community</button>
+              <button data-sec="mod">Moderator</button>
+              <button data-sec="playbook">Playbook</button>
+            </div>
+            <div class="ph-actions">
+              <button id="rulesAdd" class="btn sm">
+                <i class="fas fa-plus"></i> Add rule
+              </button>
+              <button id="rulesReset" class="btn sm danger">
+                <i class="fas fa-rotate-left"></i> Restore defaults
+              </button>
+            </div>
+          </div>
+          <div id="rulesList" class="cards"></div>
+        </section>
+
+        <section id="tab-announce" class="panel">
+          <div class="strip">
+            <i class="fas fa-bullhorn lead ic-orange"></i> Announcements
+            <span class="sub">
+              A full-screen notice shown to everyone in the lobby
+            </span>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              Only the newest <b>showing</b> notice is ever displayed, and each
+              person sees it once - closing it means they will not see it again
+              until you post a newer one. Hiding a notice takes it off the
+              lobby but keeps it here. Markdown works:
+              <code>#</code> headings, <code>-</code> lists,
+              <code>**bold**</code>, <code>`code`</code>, <code>&gt;</code>
+              quotes and links.
+            </span>
+          </p>
+          <!-- Shown only to mod leaders, never to admins. Posting reaches
+               every person on the site, so leaders get the tool for
+               emergencies, not as a regular channel. -->
+          <p class="note-box warn" id="anLeaderWarn" style="display: none">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>
+              <b>For mod leaders:</b> this reaches every single person on the
+              site, full screen. It is an admin tool that leaders can use in an
+              emergency, not a regular channel. Do not post here unless
+              something genuinely needs everyone's attention right now and no
+              admin is available. Notices posted by admins cannot be edited,
+              hidden, or deleted from here.
+            </span>
+          </p>
+
+          <div class="strip mini">
+            <i class="fas fa-pen-to-square lead" style="color: #57d9a3"></i>
+            Write a notice
+          </div>
+          <div class="an-compose">
+            <div class="an-row">
+              <select id="anKind" class="an-select" aria-label="Notice type">
+                <option value="update">Update</option>
+                <option value="notice" selected>Notice</option>
+                <option value="alert">Important</option>
+              </select>
+              <input
+                id="anTitle"
+                class="an-field"
+                type="text"
+                maxlength="120"
+                placeholder="Title, e.g. “Version 5.6 is here”"
+              />
+            </div>
+            <!-- A notice usually speaks for the team rather than whoever typed
+                 it, so the byline is free text and falls back to your label. -->
+            <input
+              id="anFrom"
+              class="an-field an-from"
+              type="text"
+              maxlength="40"
+              placeholder="From (optional) - e.g. the Fuckomatic team"
+            />
+            <textarea
+              id="anBody"
+              class="an-field an-textarea"
+              maxlength="4000"
+              rows="9"
+              placeholder="What do you want to tell everyone?&#10;&#10;## What's new&#10;- Bigger rooms for staff&#10;- Ideas &amp; Bugs board&#10;&#10;**Thanks for playing.**"
+            ></textarea>
+            <div class="an-actions">
+              <span class="an-count" id="anCount">0 / 4000</span>
+              <button id="anPreviewBtn" class="btn sm">
+                <i class="fas fa-eye"></i> Preview
+              </button>
+              <button id="anCancelEdit" class="btn sm" style="display: none">
+                Cancel edit
+              </button>
+              <button id="anPost" class="btn sm primary">
+                <i class="fas fa-paper-plane"></i> Post notice
+              </button>
+            </div>
+            <div
+              id="anPreview"
+              class="an-preview-box"
+              style="display: none"
+            ></div>
+          </div>
+
+          <div class="strip mini">
+            <i class="fas fa-clock-rotate-left lead ic-orange"></i> Posted
+            <span class="sub">Newest first</span>
+          </div>
+          <div id="anList" class="an-list"></div>
+        </section>
+
+        <!-- Guide -->
+        <section id="tab-links" class="panel">
+          <div class="strip">
+            <i class="fas fa-link lead ic-orange"></i> Allowed links
+            <span class="sub">The only domains people may share in chat</span>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              Every link typed in chat is removed unless its domain is on this
+              list. A domain covers itself and its www form and nothing else:
+              <b>youtube.com</b> allows youtube.com and www.youtube.com, but
+              not music.youtube.com, not youtube.com.example.net, and not a
+              link whose path or query hides a second address. Names,
+              locations and room names never allow links, whatever is listed
+              here. Changes apply the moment they are made.
+            </span>
+          </p>
+          <div class="toolbar">
+            <input
+              id="linkAllowInput"
+              class="an-field"
+              type="text"
+              maxlength="253"
+              placeholder="Domain, e.g. youtube.com"
+            />
+            <button id="linkAllowAdd" class="btn sm primary">
+              <i class="fas fa-plus"></i> Allow domain
+            </button>
+          </div>
+          <div id="linkAllowList" class="cards"></div>
+        </section>
+
+        <section id="tab-guide" class="panel">
+          <div class="strip">
+            <i class="fas fa-circle-question lead" style="color: #17a2b8"></i>
+            Guide
+          </div>
+          <p class="guide-intro">
+            Welcome to the moderation dashboard. Everything here is proven by
+            your staff key and checked on the server, so nothing on this page
+            can be faked from a browser. The dashboard keeps the team
+            accountable to each other: every action is logged, visible to all
+            staff, and permanent.
+          </p>
+
+          <div class="strip mini">
+            <i class="fas fa-id-badge lead ic-orange"></i> Your role
+            <span class="sub"
+              >The chain is enforced on the server: no one can act on someone at
+              their level or above.</span
+            >
+          </div>
+          <div class="role-grid">
+            <div class="role-card jr">
+              <div class="rh">
+                <i class="fas fa-user-shield"></i> Junior mod (L1)
+                <span class="chip l1">PURPLE</span>
+              </div>
+              <p class="rp">
+                Handles what is on screen, right now, in one room. Everything a
+                junior can do is reversible.
+              </p>
+              <ul>
+                <li>Warn and kick, with a ban from that one room</li>
+                <li>Wipe what someone has typed, for everyone</li>
+                <li>Reset a bad username or location</li>
+                <li>Turn someone's profile picture off</li>
+                <li>Rename, lock, or slow a room, and clear the Talkoboard</li>
+                <li>Work the report queue with warnings and kicks</li>
+                <li>Leave notes on users, and trace anyone in Activity</li>
+                <li>No IP blocks, cannot close a room</li>
+              </ul>
+            </div>
+            <div class="role-card full">
+              <div class="rh">
+                <i class="fas fa-shield-halved"></i> Full mod (L2)
+                <span class="chip l2">BLUE</span>
+              </div>
+              <p class="rp">
+                Trusted juniors. They get the actions that outlast a single room
+                and the review queues.
+              </p>
+              <ul>
+                <li>Every junior power</li>
+                <li>
+                  IP and identifier blocks from 1 hour to permanent; only an
+                  admin can lift a permanent one
+                </li>
+                <li>Close a room, spectate any public room</li>
+                <li>Discard reports, run appeals, and read the ban list</li>
+                <li>Kill bots and take down community themes</li>
+              </ul>
+            </div>
+            <div class="role-card lead3">
+              <div class="rh">
+                <i class="fas fa-user-tie"></i> Mod leader (L3)
+                <span class="chip l3">GREEN</span>
+              </div>
+              <p class="rp">
+                Runs the mod team. Everything a full mod has, plus the people.
+              </p>
+              <ul>
+                <li>Opens and closes applications, approves as junior</li>
+                <li>Promotes between L1 and L2, and revokes keys</li>
+                <li>Reads any junior or full mod's record and abuse flags</li>
+                <li>Key sessions, for spotting a shared or leaked key</li>
+                <li>Leader keys themselves are an admin decision</li>
+              </ul>
+            </div>
+            <div class="role-card dev">
+              <div class="rh">
+                <i class="fas fa-screwdriver-wrench"></i> Admin
+                <span class="chip dev">RED</span>
+              </div>
+              <p class="rp">
+                The people who run the site. Everything, on anyone except
+                another admin.
+              </p>
+              <ul>
+                <li>Lifts permanent blocks, and blocks whole wide ranges</li>
+                <li>Grants any key, including mod leaders</li>
+                <li>Megaphone, ticker, party, spotlight, freeze</li>
+                <li>Feature flags, room size, maintenance, nuke</li>
+                <li>Lifts bans through appeals</li>
+              </ul>
+            </div>
+          </div>
+          <p class="note-box">
+            <i class="fas fa-circle-info"></i>
+            <span>
+              The colors are the same everywhere. In a room an admin's row
+              glows red, a mod leader's green, a full mod's blue, and a junior
+              mod's purple, and the badge next to their name matches. Nobody
+              can act on someone at their own level or above, and the server
+              checks this on every single action, so a modified browser gains
+              nothing.
+            </span>
+          </p>
+
+          <div class="strip mini">
+            <i class="fas fa-list-check lead ic-orange"></i> Every rank in
+            detail
+            <span class="sub"
+              >What you can do, what you cannot, and who holds the thing you
+              cannot. The server enforces every line of this.</span
+            >
+          </div>
+          <div class="role-grid">
+            <div class="role-card jr">
+              <div class="rh">
+                <i class="fas fa-user-shield"></i> Junior mod (L1)
+                <span class="chip l1">PURPLE</span>
+              </div>
+              <div class="rc-sub can">You can</div>
+              <ul>
+                <li>Warn anyone who is not staff, online or queued for their next visit</li>
+                <li>Kick, with a ban from that one room (it dies with the room)</li>
+                <li>Wipe typed text, reset a name to Anonymous, reset a location, turn a profile picture off</li>
+                <li>Rename, lock, or slow-mode any room, and clear its Talkoboard</li>
+                <li>Leave staff notes on users and read everyone's notes</li>
+                <li>Work the report queue: every report reaches you, and your warning or kick settles it</li>
+                <li>Moderate the community board: set post status, remove any post or reply</li>
+                <li>Raise, claim, and resolve backup calls in the Desk's #help</li>
+                <li>Create rooms up to 15 people</li>
+              </ul>
+              <div class="rc-sub cant">You cannot</div>
+              <ul>
+                <li>IP or device block anyone (full mod)</li>
+                <li>Close a room, discard a report, or kill a bot (full mod)</li>
+                <li>Read or decide appeals, or see the ban list (full mod)</li>
+                <li>See or review applications (mod leader)</li>
+                <li>Act on, warn, or ban anybody on staff</li>
+              </ul>
+              <div class="rc-sub sees">You see</div>
+              <ul>
+                <li>The Activity feed, live report cards, and staff notes</li>
+                <li>The team roster with real staff names</li>
+                <li>Desk: #floor, #help, #activity, and the report cards in #queues</li>
+              </ul>
+            </div>
+            <div class="role-card full">
+              <div class="rh">
+                <i class="fas fa-shield-halved"></i> Full mod (L2)
+                <span class="chip l2">BLUE</span>
+              </div>
+              <div class="rc-sub can">You can (everything a junior can, plus)</div>
+              <ul>
+                <li>IP and device blocks: 1 hour, 24 hours, 7 days, or permanent</li>
+                <li>Block ranges up to /24 (IPv4) and /48 (IPv6), up to 200 entries at once</li>
+                <li>Block a reported user who has gone offline, via their last known address</li>
+                <li>Lift temporary blocks (their open appeals resolve with it)</li>
+                <li>Close a room, and spectate any public room</li>
+                <li>Run the whole report queue, including discarding reports</li>
+                <li>Handle appeals: reply, reopen, lock, dismiss, and bar repeat appeals</li>
+                <li>Resolve suggestions, kill any bot, take down community themes</li>
+                <li>Create rooms up to 25 people</li>
+              </ul>
+              <div class="rc-sub cant">You cannot</div>
+              <ul>
+                <li>Lift a permanent block, block wide ranges, or re-time a block (admin)</li>
+                <li>Lift a ban through an appeal, unbar, or delete an appeal (admin)</li>
+                <li>See or review applications, promote, or revoke keys (mod leader)</li>
+                <li>Read anybody's moderator record (mod leader)</li>
+              </ul>
+              <div class="rc-sub sees">You see</div>
+              <ul>
+                <li>The ban list and block list, live, with real staff names and no addresses</li>
+                <li>Live boards: reports, appeals, suggestions, ban history</li>
+                <li>Desk: everything a junior sees, plus #l2, #bans, and the full #queues</li>
+              </ul>
+            </div>
+            <div class="role-card lead3">
+              <div class="rh">
+                <i class="fas fa-user-tie"></i> Mod leader (L3)
+                <span class="chip l3">GREEN</span>
+              </div>
+              <div class="rc-sub can">You can (everything a full mod can, plus)</div>
+              <ul>
+                <li>Open and close moderator applications</li>
+                <li>Read applications in full and approve as junior (L1) or decline</li>
+                <li>Promote L1 to L2 and demote L2 to L1, live</li>
+                <li>Revoke a junior or full mod key, with a written reason they will see</li>
+                <li>Bring a former mod back, as a junior</li>
+                <li>Read any junior or full mod's record and review their abuse flags</li>
+                <li>Warn other mods (juniors and full mods)</li>
+                <li>Watch key sessions for shared or leaked keys</li>
+                <li>Create rooms up to 30 people</li>
+              </ul>
+              <div class="rc-sub cant">You cannot</div>
+              <ul>
+                <li>Grant a full (L2) key directly: the ladder is approve as junior, promote later</li>
+                <li>Touch a leader or admin key in any way (admin)</li>
+                <li>Read a leader's or an admin's record (admin)</li>
+                <li>Lift permanent blocks, or use any platform tool (admin)</li>
+              </ul>
+              <div class="rc-sub sees">You see</div>
+              <ul>
+                <li>Applications with answers and Discord, never addresses</li>
+                <li>Abuse flags on juniors and full mods, and key-sharing alerts</li>
+                <li>Desk: everything a full mod sees, plus #leads</li>
+              </ul>
+            </div>
+            <div class="role-card dev">
+              <div class="rh">
+                <i class="fas fa-screwdriver-wrench"></i> Admin
+                <span class="chip dev">RED</span>
+              </div>
+              <div class="rc-sub can">You can (everything a leader can, plus)</div>
+              <ul>
+                <li>Lift permanent blocks, block wide ranges, re-time any block</li>
+                <li>Lift bans through appeals, unbar appellants, delete appeals and reports</li>
+                <li>Grant any key at any level, including mod leaders</li>
+                <li>Announcements, rules, feature flags, maintenance mode, nuke</li>
+                <li>Megaphone, ticker, party, spotlight, room resize, server HUD</li>
+                <li>Freeze a user's typing, silence them, vanish, force-kick from any room</li>
+                <li>Create rooms up to 50 people</li>
+              </ul>
+              <div class="rc-sub cant">Even admins cannot</div>
+              <ul>
+                <li>Read a raw IP address; the site masks them everywhere</li>
+                <li>Act on another admin</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="strip mini">
+            <i class="fas fa-clock-rotate-left lead ic-orange"></i> Your record
+          </div>
+          <div class="guide-grid">
+            <div class="gcard">
+              <h3><i class="fas fa-camera"></i> Snapshots</h3>
+              <p>
+                Every action on a person now saves what was on screen at that
+                moment: what they had typed, whether other users had reported
+                them, what staff had already done, and who arrived first. A
+                good call looks like a good call instead of looking like a
+                number. Actions from before snapshots are shown but never
+                graded.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-folder-open"></i> Cases</h3>
+              <p>
+                One person, one sitting, everyone involved, with how it ended:
+                they went quiet, they left, they came back, they were banned,
+                or the block was overturned on appeal. Your record shows your
+                cases, and you can add a note to any of them.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-pen-to-square"></i> Rules and write-ups</h3>
+              <p>
+                Pick the rule on every ban or block; it suggests the usual
+                length, and you choose. After a block of a week or longer,
+                write up what they did, the rule, what was tried first, and why
+                this length. The block is already in place while you write.
+                Nobody decides an appeal about their own block.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-circle-question"></i> Read the whole thing</h3>
+              <p>
+                What changed, why, what every word on the record means, what
+                went away, and what it is not. Five minutes, written for you.
+              </p>
+              <button type="button" class="btn sm" id="guideRecordHelp">
+                <i class="fas fa-circle-question"></i> How records work
+              </button>
+            </div>
+          </div>
+
+          <div class="strip mini">
+            <i class="fas fa-stairs lead ic-orange"></i> How the ladder works
+          </div>
+          <div class="guide-grid">
+            <div class="gcard">
+              <h3><i class="fas fa-door-open"></i> Joining</h3>
+              <p>
+                Mod leaders open and close applications. When intake is open,
+                active members apply from the lobby, a leader reads the
+                application, and approval mints a junior (L1) key on the spot.
+                Nobody starts above junior, and nobody is auto-accepted.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-arrow-trend-up"></i> Rising</h3>
+              <p>
+                Promotion runs on the record. The number that matters is work
+                done on people: warnings, kicks, and reports settled. A leader
+                promotes a junior to full mod when the record supports it, and
+                can demote the same way. Leaders themselves are picked by
+                admins, never self-appointed.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-eye"></i> Who watches whom</h3>
+              <p>
+                Juniors and full mods are watched by the abuse detector, and
+                their flags go to mod leaders and admins. Leaders are watched
+                the same way, and their flags go to admins only. Nobody
+                reviews their own tier, and every action by every rank is in
+                the log.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-user-xmark"></i> Leaving</h3>
+              <p>
+                Keys are removed with a written reason, and the person sees
+                that reason: at once if they are online, or the next time they
+                open the site. Former mods stay on the roster's history and
+                can be brought back as juniors.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-masks-theater"></i> Who sees which names</h3>
+              <p>
+                Inside staff surfaces everyone sees real staff names, so the
+                team can talk plainly. Users, banned users, and appellants
+                only ever see "the Fuckomatic staff". Raw addresses are shown
+                to nobody.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-inbox"></i> Where the work happens</h3>
+              <p>
+                This dashboard holds the boards; the Desk rides along on every
+                page for live work. Cards in the Desk's #queues appear at the
+                rank that can settle them: reports for everyone, appeals for
+                full mods, applications and abuse flags for leaders.
+              </p>
+            </div>
+          </div>
+
+          <div class="strip mini">
+            <i class="fas fa-table-columns lead ic-orange"></i> The tabs
+          </div>
+          <div class="guide-grid">
+            <div class="gcard">
+              <h3><i class="fas fa-rectangle-list"></i> Activity</h3>
+              <p>
+                A live feed of every staff action and every identity event
+                (sign-ins and name changes). Each card is one event, color coded
+                by category. Search by name, action, IP, room, or message, and
+                filter the feed by type.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-flag"></i> Reports</h3>
+              <p>
+                Users flagged by the community, grouped by person and most
+                reported first. The card header is the reported user; the list
+                below is who reported them and why. Act right from the card:
+                anyone on staff can warn or kick, and full mods can IP block or
+                discard. A reported user who goes offline can still be blocked
+                using their last known address.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3>
+                <i class="fas fa-user-pen"></i> Applications
+                <span class="tag">LEADER</span>
+              </h3>
+              <p>
+                Active members applying for the junior role. Mod leaders open
+                and close intake, approve to mint and deliver an L1 key
+                automatically, or decline. Each card shows whether they have
+                Discord linked; someone in the Fuckomatic server is easier to
+                trust and gets the site mod role once approved. Applications
+                are never auto-accepted.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3>
+                <i class="fas fa-ban"></i> Ban list <span class="tag">L2</span>
+              </h3>
+              <p>
+                Every active block with a live countdown, who placed it, and the
+                reason, grouped by person and searchable. One tap unbans. A
+                permanent block is tagged in red and only an admin can lift it.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3>
+                <i class="fas fa-user-shield"></i> Moderators
+              </h3>
+              <p>
+                The full staff roster, colored by rank: admins red, mod leaders
+                green, full mods blue, junior mods purple. Anyone on staff can
+                read it. Leaders grant junior keys, promote or demote between
+                L1 and L2, and revoke instantly with a live downgrade; admins
+                also manage leader keys.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3>
+                <i class="fas fa-key"></i> Sessions
+                <span class="tag">LEADER</span>
+              </h3>
+              <p>
+                Who is connected on each staff key right now, plus every network
+                a key has ever connected from. A key live on more than one
+                network, or a brand-new network, may mean it was shared or
+                leaked.
+              </p>
+            </div>
+          </div>
+
+          <div class="strip mini">
+            <i class="fas fa-lightbulb lead" style="color: #ffc107"></i> Good to
+            know
+          </div>
+          <div class="guide-grid">
+            <div class="gcard">
+              <h3><i class="fas fa-route"></i> Trace a user</h3>
+              <p>
+                Click any underlined name in the feed to focus that person. You
+                will see every name they have used and every action taken
+                against them, so a troublemaker can be followed even after a
+                rename.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-comment"></i> Leave a note</h3>
+              <p>
+                Type under any activity entry to add a permanent comment or ask
+                why an action was taken. All staff see comments live, so use
+                them to keep each other in the loop.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-user-lock"></i> IP privacy</h3>
+              <p>
+                Raw IP addresses are never shown on this page. Staff can still
+                ban or IP block a user, because the server handles the address
+                for them, but nobody reads it off a screen.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-user-secret"></i> Staff colors</h3>
+              <p>
+                Rank has one color everywhere, on this dashboard and in rooms:
+                admins red, mod leaders (L3) green, full mods (L2) blue, junior
+                mods (L1) purple. In the Activity feed the person who acted is
+                colored the same way, so you can tell at a glance who took an
+                action.
+              </p>
+            </div>
+            <div class="gcard">
+              <h3><i class="fas fa-image-portrait"></i> Profile pictures</h3>
+              <p>
+                Any staff member can turn a user's Discord picture off from
+                their row in a room. The block follows the browser rather than
+                the session, so clearing cookies does not bring it back, and it
+                can be lifted again from the same menu.
+              </p>
+            </div>
+          </div>
+
+          <div class="strip mini">
+            <i class="fas fa-palette lead ic-orange"></i> Activity categories
+            <span class="sub"
+              >The icon color on each Activity card tells you what kind of event
+              it is.</span
+            >
+          </div>
+          <div id="legend" class="legend"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Before mod.js: the socket sends this browser's device id, and without
+         it the key watch cannot tell this tab from a second person's. -->
+    <script src="js/identity.js?v=1.0.2"></script>
+    <script src="js/modernnotify.min.js?v=1.1.0"></script>
+    <script src="js/notify.js?v=1.0.0"></script>
+    <script src="js/staff-ui.js?v=1.11.0"></script>
+    <script src="js/desk.js?v=1.1.0"></script>
+    <script src="js/mod.js?v=4.23.0"></script>
+      <script src="js/warning.js?v=1.1.0"></script>
+      <script src="js/staff-key.js?v=1.0.0"></script>
+  </body>
+</html>

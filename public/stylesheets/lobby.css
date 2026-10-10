@@ -1,0 +1,3225 @@
+/* 
+   Fuckomatic Lobby Stylesheet
+   ===========================
+
+   This CSS file is responsible for styling the lobby page of the Fuckomatic application. It includes
+   font declarations, global styles, layout containers, form elements, and responsive design rules to
+   ensure the page adapts well to different screen sizes. The focus is on creating a clean and user-friendly 
+   interface with appropriate font usage, color schemes, and interaction feedback.
+
+   Last updated: 2024
+*/
+
+/* Fuckomatic Colours */
+:root {
+  /* Theme tokens: the whole visual language in a handful of knobs. The
+     visual theme editor overrides these per device (theme-engine.js). */
+  --tk-accent: #ff9800;
+  --tk-accent-hover: #f57c00;
+  --tk-detail: #01ffff;
+  --tk-bg: #202020;
+  --tk-text: #ffffff;
+  --tk-muted: #cccccc;
+  --tk-border: #616161;
+  --tk-panel: #616161;
+  --tk-tile: #1b1b1b;
+  --tk-tile-hover: #242424;
+  --tk-card: #000000;
+  --tk-cream: #fdf5e6;
+  --tk-cream-text: #000000;
+  --tk-chat-text: #ffa500;
+  --tk-chat-bg: #000000;
+  --tk-input-bg: #ffffff;
+
+  --primary: var(--tk-accent);
+
+  --background-color: var(--tk-bg);
+  --left-panel-background-color: var(--tk-panel);
+  --external-links-background-color: var(--tk-tile);
+  --hover-external-links-background-color: var(--tk-tile-hover);
+  --visited-external-links-background-color: var(--tk-tile);
+  --known-as-section-background-color: var(--tk-cream);
+  --logform-background-color: var(--tk-input-bg);
+  --logform-button-background-color: var(--tk-card);
+  --hover-logform-button-background-color: #cccccc;
+  --create-room-section-background-color: var(--tk-cream);
+  --learn-more-section-background-color: var(--tk-panel);
+  --room-name-input-background-color: var(--tk-input-bg);
+  --go-chat-button-background-color: var(--tk-card);
+  --hover-go-chat-button-background-color: var(--tk-accent-hover);
+  --right-panel-background-color: var(--tk-bg);
+  --room-background-color: var(--tk-card);
+  --room-enter-button-background-color: var(--tk-card);
+  --toggle-menu-button-background-color: #9e9e9e;
+  --hide-menu-button-background-color: var(--tk-panel);
+  --hover-hide-menu-button-background-color: #cccccc;
+  --modal-background-color: rgba(0, 0, 0, 0.8);
+  --modal-content-info-background-color: var(--tk-bg);
+  --close-modal-background-color: var(--tk-card);
+  --layout-item-background-color: var(--tk-card);
+  --modal-scroll-bar-track-background-color: var(--tk-bg);
+  --modal-scroll-bar-thumb-background-color: var(--tk-border);
+  --custom-modal-background-color: rgba(0, 0, 0, 0.85);
+  --modal-content-background-color: var(--tk-bg);
+  --close-modal-button-background-color: rgba(0, 0, 0, 0.3);
+  --hover-close-modal-button-background-color: rgba(0, 0, 0, 0.6);
+  --modal-title-background-gradient-top-color: #616161;
+  --modal-title-background-gradient-bottom-color: #303030;
+  --modal-input-background-color: var(--tk-card);
+  --modal-button-background-color: var(--tk-card);
+  --hover-modal-button-background-color: #2a2a2a;
+  --modal-confirm-button-background-color: var(--tk-card);
+  --hover-modal-confirm-button-background-color: var(--tk-card);
+  --spectate-button-background-color: var(--tk-card);
+  --spectator-indicator-background-color: #ffeb3b;
+  --spectator-count-background-color: rgba(255, 235, 59, 0.1);
+  --spectator-notice-background-color: rgba(255, 235, 59, 0.95);
+  --spectator-disabled-chat-input-background-color: #222222;
+  --spectator-room-type-background-color: #ffeb3b;
+  --disabled-emotes-button-background-color: #333333;
+
+  --left-panel-color: var(--tk-text);
+  --lobby-label-color: var(--tk-text);
+  --external-links-color: var(--tk-text);
+  --known-as-section-color: var(--tk-cream-text);
+  --logform-button-color: var(--tk-text);
+  --create-room-section-color: var(--tk-cream-text);
+  --learn-more-section-color: var(--tk-text);
+  --hover-learn-more-section-color: var(--tk-accent-hover);
+  --lobby-form-color: var(--tk-text);
+  --lobby-form-radio-label-color: var(--tk-text);
+  --go-chat-button-color: var(--tk-text);
+  --right-panel-color: #202020;
+  --room-name-color: var(--tk-text);
+  --room-details-color: var(--tk-detail);
+  --user-detail-color: var(--tk-text);
+  --user-detail-number-color: var(--tk-text);
+  --room-enter-button-color: var(--tk-text);
+  --hover-room-enter-button-color: black;
+  --room-bottom-section-color: var(--tk-muted);
+  --copyright-info-color: var(--tk-text);
+  --toggle-menu-button-color: var(--tk-text);
+  --hide-menu-button-color: var(--tk-text);
+  --hover-hide-menu-button-color: black;
+  --modal-content-info-color: var(--tk-text);
+  --hover-close-modal-color: black;
+  --layout-item-color: var(--tk-text);
+  --creator-color: var(--tk-text);
+  --creator-link-color: var(--tk-text);
+  --visited-creator-link-color: var(--tk-text);
+  --hover-creator-link-color: #c7c7c7;
+  --modal-content-color: var(--tk-text);
+  --hover-close-modal-button-color: #ffff00;
+  --modal-message-color: var(--tk-muted);
+  --input-error-color: var(--tk-error, #ff5252);
+  --modal-button-color: var(--tk-text);
+  --modal-confirm-button-color: var(--tk-text);
+  --spectate-button-color: var(--tk-text);
+  --hover-spectate-button-color: black;
+  --full-room-name-color: #949494;
+  --spectator-indicator-color: #333333;
+  --spectator-count-color: #ffeb3b;
+  --spectator-notice-color: #333333;
+  --spectator-room-type-color: #333333;
+
+  --logform-border-color: white;
+  --room-name-input-border-color: white;
+  --room-top-border-color: white;
+  --modal-content-info-border-color: var(--tk-border);
+  --close-modal-border-color: var(--tk-border);
+  --layout-item-border-color: var(--tk-border);
+  --close-modal-button-border-color: #444444;
+  --modal-input-border-color: #444444;
+  --focus-modal-input-border-color: cyan;
+  --modal-button-border-color: #444444;
+  --hover-modal-button-border-color: #666666;
+  --spectator-count-border-color: rgba(255, 235, 59, 0.3);
+
+  --modal-content-info-shadow-color: rgba(0, 0, 0, 0.5);
+  --modal-content-shadow-color: color-mix(
+    in srgb,
+    var(--tk-accent) 50%,
+    transparent
+  );
+  --focus-modal-input-shadow-color: rgba(0, 255, 255, 0.3);
+  --hover-spectate-button-shadow-color: rgba(255, 235, 59, 0.3);
+  --spectator-notice-shadow-color: rgba(0, 0, 0, 0.3);
+  --enter-button-shadow-color: rgba(0, 0, 0, 0.2);
+
+  --focus-creator-link-outline-color: #c7c7c7;
+
+  /* The lighter orange used for hover lifts and warm accents. Kept separate
+     from --tk-accent-hover, which darkens instead. */
+  --accent-bright: #ffa726;
+
+  /* Discord's current blurple. #7289da is their pre-2021 one and reads dull. */
+  --discord-icon-color: #3a63fa;
+  --community-icon-color: #ff6b35;
+  --info-circle-icon-color: #17a2b8;
+  --youtube-play-circle-icon-color: red;
+  --app-directory-icon-color: #6f42c1;
+  --donate-icon-color: #ee3fcb;
+  --themes-icon-gradient-left-color: red;
+  --themes-icon-gradient-middle-color: green;
+  --themes-icon-gradient-right-color: blue;
+}
+
+/* Font Declarations */
+/* Define custom fonts used throughout the lobby */
+@font-face {
+  font-family: "talkoSS"; /* Main font family for general text */
+  src: url("../fonts/Sansation_Light.ttf"); /* Light version of the font */
+}
+
+@font-face {
+  font-family: "talkoSS";
+  src: url("../fonts/Sansation_Bold.ttf"); /* Bold version for emphasis */
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: "talkoText"; /* Special font for specific text elements */
+  src: url("../fonts/dited.otf");
+}
+
+/* Global Styles */
+/* Set default styles for the HTML and body elements */
+body,
+html {
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
+  height: 100%; /* Ensure body takes up full viewport height */
+  overflow: hidden; /* Hide overflow to prevent unwanted scroll bars */
+  font-family: var(
+    --tk-font-main,
+    talkoSS,
+    Arial,
+    sans-serif
+  ); /* Use custom font, fallback to Arial */
+  background-color: var(--background-color); /* Dark background color */
+}
+
+/* Layout Containers */
+/* Flexbox container that holds the left and right panels */
+.container {
+  display: flex; /* Flex layout to align panels horizontally */
+  height: 100vh; /* Full viewport height */
+  overflow: hidden; /* Prevent overflow */
+}
+
+/* Ensure both panels fill the height of the container and allow scrolling */
+.left-panel,
+.right-panel {
+  height: 100%;
+  overflow-y: auto; /* Enable vertical scrolling */
+  box-sizing: border-box; /* Include padding/border in the element's width/height */
+}
+
+/* Left Panel Styles */
+/* Styles for the left panel that contains menu and form elements */
+.left-panel {
+  width: 320px; /* Fixed width for left panel */
+  background-color: var(
+    --left-panel-background-color
+  ); /* Dark gray background */
+  color: var(--left-panel-color); /* White text color */
+  transition: transform 0.3s ease-in-out; /* Smooth transition for showing/hiding */
+  display: flex;
+  flex-direction: column; /* Stack child elements vertically */
+  margin-top: 23px; /* Space from the top */
+  height: calc(100vh - 23px); /* Adjust height considering the top margin */
+  /* dvh excludes the browser chrome on iOS, where 100vh reaches under the
+     toolbar and hides the bottom of the panel. */
+  height: calc(100dvh - 23px);
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden; /* Disable horizontal scrolling */
+  scrollbar-width: none; /* Hide scrollbar in Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar in Internet Explorer */
+}
+
+/* Hide scrollbar in WebKit browsers (Chrome, Safari) */
+.left-panel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* Ensure all children of the left panel fit within the padding */
+.left-panel > * {
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+/* Header, known-as section, and create room section will have no horizontal padding */
+.panel-header,
+.known-as-section,
+.createRoom {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Ensure text inputs fill the full width of the container */
+#logform input,
+#lobbyForm input[type="text"] {
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width */
+}
+
+/* Header section with Fuckomatic branding */
+.panel-header {
+  text-align: center; /* Center the text */
+  padding-top: 20px;
+  padding-bottom: 8px;
+}
+
+/* Fuckomatic title with bold orange text */
+.panel-header .fuckomatic {
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-weight: bold;
+  font-size: 24px;
+  color: var(--primary); /* Bright orange for emphasis */
+  margin-right: 5px;
+}
+
+/* Lobby label in white next to the Fuckomatic logo */
+.panel-header .lobby {
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-weight: normal;
+  font-size: 24px;
+  color: var(--lobby-label-color);
+}
+
+/* A quiet second line under the wordmark, for people who land here with no
+   idea what Fuckomatic is. Deliberately not one of the tile buttons: those
+   are errands, this is the explanation of the place. */
+.panel-header-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 15px;
+}
+
+.panel-header-links span {
+  color: var(--lobby-label-color);
+  opacity: 0.45;
+}
+
+.panel-header-links a,
+.panel-header-links a:visited {
+  color: var(--lobby-label-color);
+  text-decoration: none;
+}
+
+.panel-header-links a:hover {
+  text-decoration: underline;
+}
+
+/* No double-tap-zoom wait on touch screens: taps fire immediately. */
+button,
+a,
+.enter-button {
+  touch-action: manipulation;
+}
+
+/* The lobby form has always toggled this class on sign in and sign out, but the
+   rule behind it was missing, so the create-room box showed to everyone. It
+   matters now that a name is required: no name, no room form. */
+.hidden {
+  display: none !important;
+}
+
+/* Two columns of labelled tiles under the header. Bare glyphs looked tidy but
+   nobody could tell what they did; a short label next to each one settles it. */
+.external-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-bottom: 14px;
+  width: 100%;
+}
+
+.external-links a {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px 11px;
+  background-color: var(--external-links-background-color);
+  border: var(--tk-border-width, 1px) solid var(--tk-border);
+  border-radius: var(--tk-radius, 5px);
+  color: var(--external-links-color);
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.external-links a:hover {
+  background-color: var(--hover-external-links-background-color);
+  border-color: var(--tk-accent);
+}
+
+.external-links a > i {
+  flex: none;
+  width: 16px;
+  /* The page-wide .fa-discord / .fa-paintbrush rules carry a margin-right
+     that would push these two labels out of line with the rest. */
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+}
+
+.external-links a > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Scoped to this strip on purpose: .fa-bullhorn and friends are used in other
+   menus too, and those should keep whatever they already look like. One
+   distinct colour per tile: Discord blurple, themes the pink every palette
+   icon wears, announcements red, stats green, staff blue like the mod chips,
+   bots the same teal as the room's robot toggle. */
+.external-links .fa-discord {
+  color: var(--discord-icon-color);
+}
+.external-links .fa-paintbrush {
+  color: #e91e63;
+  background: none;
+}
+.external-links .fa-bullhorn {
+  color: #ff5468;
+}
+.external-links .fa-chart-column {
+  color: #57d9a3;
+}
+.external-links .fa-key,
+.external-links .fa-gauge-high {
+  color: #5aa9ff;
+}
+.external-links .fa-robot {
+  color: #26c6da;
+}
+.external-links .fa-user-pen {
+  color: var(--tk-accent);
+}
+
+/* "Apply to be a mod" takes a full row of its own under the grid. */
+.external-links a.wide {
+  grid-column: 1 / -1;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.external-links a.wide:hover {
+  border-color: rgba(255, 152, 0, 0.55);
+}
+
+/* The tag on that button: green OPEN means the form opens, red CLOSED means
+   the click explains why it will not. An applicant sees their own decision
+   in its colour instead. Same greens and reds as the board badges. */
+.external-links .apply-state {
+  flex: none;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.6px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.external-links .apply-state.is-open {
+  background-color: #2e7d32;
+}
+.external-links .apply-state.is-closed {
+  background-color: #c62828;
+}
+
+/* Floating tools pinned to the top right of the room list, outside both
+   panels so more can join them later without touching either. */
+.corner-tools {
+  position: fixed;
+  top: 30px;
+  right: 16px;
+  z-index: 900;
+  display: flex;
+  gap: 8px;
+}
+
+.corner-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background-color: var(--external-links-background-color);
+  border: var(--tk-border-width, 1px) solid var(--tk-border);
+  border-radius: var(--tk-radius, 5px);
+  color: #e91e63;
+  font-size: 16px;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.corner-tool i {
+  margin: 0;
+}
+
+.corner-tool:hover {
+  background-color: var(--hover-external-links-background-color);
+  border-color: var(--tk-accent);
+}
+
+/* ── Ideas & Bugs card ──────────────────────────────────────────────────────
+   Deliberately not one of the links above. It is the only thing in this panel
+   we want people to actually go and do, and a one-line explanation is what
+   makes them post the right thing in the right place instead of guessing. */
+.ideas-card {
+  background-color: var(--external-links-background-color);
+  /* Square-cornered and borderless, it read as a slab of background rather
+     than a card. The amber edge ties it to the lightbulb and marks it as the
+     one thing in this panel worth acting on. */
+  border: 1px solid color-mix(in srgb, var(--accent-bright) 28%, transparent);
+  border-radius: 7px;
+  /* Its own padding replaced the 18px inset .left-panel > * gives every child
+     (same specificity, later rule), so the card sat flush against both panel
+     edges while everything around it was inset. width:auto lets the margin
+     put it back in line; box-sizing comes from that same parent rule. */
+  width: auto;
+  margin: 10px 14px 0px 14px;
+  padding: 14px 16px 15px;
+}
+
+.ideas-card-head {
+  display: flex;
+  align-items: center;
+  color: var(--external-links-color);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+}
+
+/* The lightbulb sits in its own tinted disc so the card has one clear anchor
+   instead of a glyph floating next to text. */
+.ideas-card-head > i {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-bright) 16%, transparent);
+  font-size: 13px;
+  color: var(--accent-bright);
+}
+
+.ideas-card-sub {
+  margin: 9px 0 12px;
+  color: var(--external-links-color);
+  opacity: 0.72;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ideas-card-btn {
+  display: block;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--tk-radius, 5px);
+  background-color: var(--tk-accent);
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.ideas-card-btn:hover,
+.ideas-card-btn:visited {
+  color: #1a1a1a;
+}
+
+.ideas-card-btn:hover {
+  background-color: var(--accent-bright);
+}
+
+.ideas-card-btn:active {
+  transform: translateY(1px);
+}
+
+/* Known-as section with a light background */
+.known-as-section {
+  background-color: var(
+    --known-as-section-background-color
+  ); /* Light beige background for contrast */
+  padding: 18px;
+}
+
+/* Style for the paragraph in the known-as section */
+.known-as-section p {
+  color: var(--known-as-section-color); /* Black text */
+  margin: 0;
+  font-weight: bold;
+}
+
+/* Log Form Styles */
+/* Style for the sign-in form */
+#logform {
+  margin-top: 20px;
+  padding: 0 18px;
+  position: relative;
+  padding-bottom: 55px; /* Extra padding to account for the button */
+}
+
+/* Form layout: vertical stack of inputs */
+#logform form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input fields in the form */
+#logform input {
+  margin-bottom: 15px;
+  padding: 12px;
+  border: 1px solid var(--logform-border-color); /* White border */
+  background-color: var(--logform-background-color); /* White background */
+  font-size: 16px;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+}
+
+/* Submit button at the bottom of the form */
+#logform button {
+  position: absolute; /* Positioned at the bottom of the form */
+  bottom: 0;
+  right: 18px;
+  width: 100px;
+  padding: 12px 16px;
+  background-color: var(
+    --logform-button-background-color
+  ); /* Black background */
+  color: var(--logform-button-color); /* White text */
+  border: 1px solid var(--primary); /* Orange border */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-weight: light;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease; /* Smooth hover transition */
+  font-size: 12px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+}
+
+/* Icon next to the button text */
+#logform button .arrow-icon {
+  margin-left: 5px;
+  height: 14px;
+  width: 14px;
+}
+
+/* Hover effect for the button */
+#logform button:hover {
+  background-color: var(
+    --hover-logform-button-background-color
+  ); /* Light gray background on hover */
+  border-color: var(--primary); /* Keep orange border */
+}
+
+/* Create Room Section */
+/* Section where users can create new rooms */
+.createRoom {
+  background-color: var(
+    --create-room-section-background-color
+  ); /* Light background */
+  padding: 18px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Heading in the create room section */
+.createRoom p {
+  color: var(--create-room-section-color);
+  margin: 0;
+  font-weight: bold;
+  flex: 1;
+}
+
+/* Button to learn more about creating rooms */
+.createRoom .learn-more {
+  color: var(--learn-more-section-color); /* White text */
+  background-color: var(
+    --learn-more-section-background-color
+  ); /* Dark gray background */
+  padding: 12px 16px;
+  text-decoration: none; /* No underline */
+  font-size: 16px;
+  transition: color 0.3s ease; /* Smooth transition on hover */
+}
+
+/* Hover effect for learn more button */
+.createRoom .learn-more:hover {
+  color: var(--hover-learn-more-section-color); /* Orange text on hover */
+  text-decoration: underline; /* Add underline on hover */
+}
+
+/* Lobby Form Styles */
+/* Styles for the room creation form */
+#lobbyForm {
+  margin-top: 20px;
+  padding: 0 18px;
+  position: relative;
+  padding-bottom: 50px; /* Extra padding to accommodate the button */
+}
+
+/* Text input for room name */
+#lobbyForm input[type="text"] {
+  width: 90%; /* Adjust input width */
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid var(--room-name-input-border-color); /* White border */
+  background-color: var(
+    --room-name-input-background-color
+  ); /* White background */
+  font-size: 16px;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+}
+
+/* Layout for radio button groups */
+#lobbyForm .radio-group {
+  display: flex;
+  flex-direction: column; /* Stack radio buttons vertically */
+  margin-bottom: 15px;
+}
+
+/* Yes/No groups sit on one line instead of stacking */
+#lobbyForm .radio-group.inline {
+  flex-direction: row;
+  gap: 20px;
+}
+
+#lobbyForm .radio-group.inline label {
+  width: auto;
+}
+
+/* Individual radio button labels */
+#lobbyForm .radio-group label {
+  margin-bottom: 10px;
+  color: var(--lobby-form-radio-label-color); /* White text */
+  font-size: 14px;
+  display: flex;
+  align-items: center; /* Align text and radio button vertically */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Space between radio button and label text */
+#lobbyForm .radio-group input[type="radio"] {
+  margin-right: 10px;
+}
+
+/* Icon next to radio label */
+#lobbyForm .radio-group .radio-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+/* Description text in lobby form */
+#lobbyForm p {
+  color: var(--lobby-form-color);
+  font-weight: light;
+  margin-bottom: 10px;
+}
+
+/* How many people fit in the room. Replaced the layout radios, which moved
+   into the room itself as a button. */
+#lobbyForm .size-slider {
+  width: 90%;
+  margin-bottom: 15px;
+}
+
+#lobbyForm #roomSizeValue {
+  color: var(--tk-accent);
+  font-weight: bold;
+}
+
+#lobbyForm .size-slider input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  margin: 4px 0;
+  background: var(--tk-dim, #3a3a3a);
+  border: 1px solid var(--room-name-input-border-color);
+  cursor: pointer;
+}
+
+#lobbyForm .size-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--tk-accent);
+  border: 1px solid #000;
+  cursor: pointer;
+}
+
+#lobbyForm .size-slider input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 0;
+  background: var(--tk-accent);
+  border: 1px solid #000;
+  cursor: pointer;
+}
+
+#lobbyForm .size-slider input[type="range"]:focus {
+  outline: none;
+  border-color: var(--tk-accent);
+}
+
+/* The numbers under the track, so the range is readable without dragging. */
+#lobbyForm .size-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--lobby-form-color);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Container for the go chat button */
+.button-container {
+  position: absolute;
+  bottom: 20px;
+  right: 18px;
+  margin-top: 20px;
+}
+
+/* Button to join a chat */
+.go-chat-button {
+  padding: 12px 16px;
+  background-color: var(
+    --go-chat-button-background-color
+  ); /* Black background */
+  color: var(--go-chat-button-color); /* White text */
+  border: 1px solid var(--primary); /* Orange border */
+  border-radius: 4px; /* Rounded corners */
+  cursor: pointer;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-size: 14px;
+  transition: background-color 0.3s ease; /* Smooth hover transition */
+}
+
+/* Hover effect for the chat button */
+.go-chat-button:hover {
+  background-color: var(
+    --hover-go-chat-button-background-color
+  ); /* Orange background on hover */
+}
+
+/* Right Panel Styles */
+/* Main content area on the right side */
+.right-panel {
+  flex-grow: 1; /* Take up remaining space */
+  background-color: var(
+    --right-panel-background-color
+  ); /* Match the body background color */
+  color: var(--right-panel-color); /* White text */
+  padding-top: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Heading in the right panel */
+.right-panel h2 {
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-weight: normal;
+  font-size: 25px;
+  color: var(--primary); /* Orange text for emphasis */
+  margin-bottom: 40px;
+  padding-left: 8px;
+}
+
+/* Message to prompt sign-in.
+   This used to inherit --right-panel-color, which is the same #202020 as the
+   panel it sits on, so the one instruction a new visitor needs was invisible.
+   Two rows: the icon sits on the heading line, the explanation runs under it.
+   The fill is a solid colour, not a tint of the accent - a translucent panel
+   over a near-black background just read as a smudge. */
+#signInMessage {
+  display: block;
+  max-width: 100%;
+  margin: 0 20px 20px;
+  padding: 13px 16px 14px;
+  border-radius: 7px;
+  background-color: #2b2b2b;
+}
+
+/* Row one: icon and heading together on a single line. */
+#signInMessage .sim-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--primary);
+}
+
+#signInMessage .sim-head > i {
+  flex: none;
+  font-size: 15px;
+}
+
+#signInMessage strong {
+  font-size: 14.5px;
+  line-height: 1.3;
+}
+
+/* Row two: the supporting line, in body colour. Two lines of orange reads as
+   a warning rather than a prompt. */
+#signInMessage .sim-sub {
+  display: block;
+  margin-top: 5px;
+  color: var(--tk-text, #fff);
+  opacity: 0.8;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+/* Message shown when there are no rooms */
+#noRoomsMessage {
+  padding-left: 20px;
+}
+
+/* Room List Styles */
+/* Container for the list of available rooms */
+.roomList {
+  overflow-y: auto; /* Enable vertical scrolling */
+  display: flex;
+  flex-direction: column; /* Stack rooms vertically */
+}
+
+/* Container for each room */
+.rooms {
+  flex-grow: 1;
+}
+
+/* Individual room in the room list */
+.room {
+  background-color: var(--room-background-color); /* Black background */
+  padding: 8px 8px 0 8px;
+  position: relative;
+  border-top: 1px solid var(--room-top-border-color); /* White border at the top */
+}
+
+/* Top section of a room */
+.room-top {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+}
+
+/* Information about the room */
+.room-info {
+  width: 100%;
+}
+
+/* Room name */
+.room-name {
+  font-size: 16px;
+  color: var(--room-name-color); /* White text */
+  margin-bottom: 5px;
+}
+
+/* Room details (e.g., number of users) */
+.room-details {
+  font-size: 14px;
+  color: var(--room-details-color); /* Cyan text */
+  margin-bottom: 5px;
+}
+
+/* User details section */
+.users-detail {
+  display: flex;
+  flex-direction: column; /* Stack user details vertically */
+  margin-bottom: 8px;
+}
+
+/* Styling for individual user details */
+.users-detail div {
+  font-size: 15px;
+  color: var(--user-detail-color); /* White text */
+  margin-bottom: 4px;
+}
+
+/* Number of users */
+.users-detail .user-number {
+  color: var(--user-detail-number-color);
+  margin-right: 5px;
+}
+
+/* Highlight user names in orange */
+.users-detail .user-name {
+  color: var(--primary); /* Orange color */
+}
+
+/* Away users: the row dims and gets a tag, so a glance at a big room shows
+   who is actually there. */
+.users-detail div.afk-lobby-user {
+  opacity: 0.6;
+}
+
+.users-detail .user-afk {
+  color: var(--tk-muted);
+  font-size: 13px;
+}
+
+/* Enter room button */
+.enter-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: var(
+    --room-enter-button-background-color
+  ); /* Black background */
+  color: var(--room-enter-button-color); /* White text */
+  border: 1px solid var(--primary); /* Orange border */
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-size: 14px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease; /* Smooth transition */
+}
+
+/* Hover effect for enter button */
+.enter-button:hover {
+  background-color: var(--primary); /* Orange background */
+  color: var(--hover-room-enter-button-color); /* Black text */
+}
+
+/* Disabled state for the enter button */
+.enter-button:disabled {
+  cursor: not-allowed; /* Show not-allowed cursor */
+}
+
+/* Enter + spectate share one row at the top-right so they line up at the same height */
+.room-actions {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.room-actions .enter-button {
+  position: static;
+  top: auto;
+  right: auto;
+}
+.room-actions .spectate-button {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  font-size: 14px;
+}
+
+/* Bottom section of the room */
+.room-bottom {
+  font-size: 14px;
+  color: var(--room-bottom-section-color); /* Light gray text */
+  font-style: italic; /* Italicized text */
+  margin-top: 10px;
+}
+
+/* Copyright Info */
+/* Footer section with copyright and version information */
+.copyright-info {
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--copyright-info-color);
+  font-family: talkoss, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Styling for the version text */
+.copyright-info .version {
+  color: var(--primary); /* Orange text */
+  margin-right: 5px;
+}
+
+/* Dot separator between items */
+.copyright-info .dot {
+  margin: 0 5px;
+}
+
+/* Toggle and Hide Menu Buttons */
+/* Buttons to toggle and hide the left menu */
+.toggle-button,
+.hide-menu-button {
+  display: none; /* Initially hidden */
+  color: var(--toggle-menu-button-color); /* White text */
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  transition: opacity 0.3s ease-in-out; /* Smooth transition */
+}
+
+/* Toggle button styles */
+.toggle-button {
+  position: fixed;
+  top: 23.5px;
+  left: 0;
+  z-index: 1001; /* Above other elements */
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  background-color: var(
+    --toggle-menu-button-background-color
+  ); /* Gray background */
+  font-size: 18px;
+  padding: 10px 15px 10px 10px;
+  opacity: 1;
+  transition:
+    left 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
+}
+
+/* Symbol for the toggle button (hamburger menu) */
+.toggle-button::after {
+  content: "≡";
+  margin-left: 10px;
+  font-size: 24px;
+}
+
+/* Hide menu button styles */
+.hide-menu-button {
+  margin-bottom: 10px;
+  background-color: var(--hide-menu-button-background-color);
+  width: 100%;
+  color: var(--hide-menu-button-color);
+  padding-top: 20px;
+  padding-left: 15px;
+  text-align: left;
+  font-size: 18px;
+}
+
+/* Hover effect for hide menu button */
+.hide-menu-button:hover {
+  background-color: var(
+    --hover-hide-menu-button-background-color
+  ); /* Light gray background */
+  color: var(--hover-hide-menu-button-color); /* Black text */
+}
+
+/* Modal base styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-background-color);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.modal.show {
+  display: flex;
+  opacity: 1;
+}
+
+.modal-content-info {
+  background-color: var(--modal-content-info-background-color);
+  margin: auto;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 20px var(--modal-content-info-shadow-color);
+  border: 1px solid var(--modal-content-info-border-color);
+  color: var(--modal-content-info-color);
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+}
+
+.close-modal {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: var(--primary);
+  transition: color 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--close-modal-border-color);
+  border-radius: 4px;
+  background-color: var(--close-modal-background-color);
+}
+
+.close-modal:hover {
+  background-color: var(--primary);
+  color: var(--hover-close-modal-color);
+}
+
+.modal h2 {
+  color: var(--primary);
+  font-size: 24px;
+  margin-bottom: 2rem;
+  font-weight: normal;
+  padding-right: 40px;
+}
+
+.modal-section {
+  margin-bottom: 2.5rem;
+}
+
+.modal-section h3 {
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.room-type-info,
+.layout-info {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.type-item,
+.layout-item {
+  background-color: var(--layout-item-background-color);
+  padding: 1.5rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--layout-item-border-color);
+  transition: border-color 0.3s ease;
+}
+
+.type-item:hover,
+.layout-item:hover {
+  border-color: var(--primary);
+}
+
+.info-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 1rem;
+}
+
+.type-item h4,
+.layout-item h4 {
+  margin: 0.5rem 0;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: normal;
+}
+
+.type-item p,
+.layout-item p {
+  margin: 0;
+  color: var(--layout-item-color);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.creator {
+  color: var(--creator-color); /* Dark gray text */
+  font-size: 14px;
+}
+
+.creator-link {
+  color: var(--creator-link-color); /* Match the text color */
+  text-decoration: none; /* Remove default underline */
+  transition: all 0.2s ease; /* Smooth transition for hover effect */
+}
+
+.creator-link:visited {
+  color: var(
+    --visited-creator-link-color
+  ); /* Ensure visited links stay the same color */
+}
+
+.creator-link:hover {
+  text-decoration: underline; /* Add underline on hover */
+  color: var(--hover-creator-link-color); /* Slightly lighter on hover */
+}
+
+/* Optional: Add focus state for accessibility */
+.creator-link:focus {
+  outline: 2px solid var(--focus-creator-link-outline-color);
+  outline-offset: 2px;
+  text-decoration: underline;
+}
+
+/* Responsive Grid Layouts */
+@media (min-width: 768px) {
+  .room-type-info {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .layout-info {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 767px) {
+  .modal-content-info {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .room-type-info,
+  .layout-info {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .type-item,
+  .layout-item {
+    padding: 1rem;
+  }
+
+  .modal h2 {
+    font-size: 20px;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-section h3 {
+    font-size: 18px;
+    margin-bottom: 1rem;
+  }
+
+  .type-item h4,
+  .layout-item h4 {
+    font-size: 16px;
+  }
+
+  .type-item p,
+  .layout-item p {
+    font-size: 14px;
+  }
+
+  .close-modal {
+    right: 0.5rem;
+    top: 0.5rem;
+  }
+}
+
+/* Scrollbar Styling */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--modal-scroll-bar-track-background-color);
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--modal-scroll-bar-thumb-background-color);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Responsive Styles */
+/* Media query for screens narrower than 600px (small devices) */
+@media (max-width: 600px) {
+  .copyright-info {
+    flex-direction: column;
+  }
+
+  .copyright-info .dot {
+    display: none; /* Hide dot separator */
+  }
+
+  .copyright-info .copyright {
+    margin-top: 5px;
+  }
+
+  .left-panel {
+    width: 100%; /* Take full width on small screens */
+  }
+  .hide-menu-button {
+    width: 100%; /* Ensure the button spans the full width */
+  }
+}
+
+/* Media query for shorter screens (max height: 600px) */
+@media (max-height: 600px) {
+  .left-panel {
+    overflow-y: auto; /* Ensure scrolling if the panel overflows */
+  }
+  #lobbyForm {
+    padding-bottom: 100px; /* Extra padding for small screens */
+  }
+  .button-container {
+    bottom: 40px; /* Adjust button placement */
+  }
+}
+
+/* Media query for medium-sized screens (max width: 992px) */
+@media (max-width: 992px) {
+  .container {
+    flex-direction: column; /* Stack panels vertically on smaller screens */
+  }
+  .left-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    height: 100dvh; /* Keeps the panel bottom above the mobile browser bar */
+    width: 320px;
+    max-width: 100%; /* Ensure the panel fits the screen */
+    z-index: 1000; /* Above other elements */
+    transform: translateX(-100%); /* Initially hidden off-screen */
+    padding-top: 60px; /* Space for the hide menu button */
+    margin-top: 0; /* Remove top margin */
+    overflow-y: auto; /* Enable scrolling */
+  }
+
+  /* Left panel when open */
+  .left-panel.open {
+    transform: translateX(0); /* Slide into view */
+  }
+  .right-panel {
+    width: 100%; /* Full width on mobile */
+    height: 100vh; /* Full height */
+    padding-top: 80px;
+  }
+  .toggle-button,
+  .hide-menu-button {
+    display: block; /* Show the buttons */
+  }
+  .toggle-button {
+    opacity: 1;
+    position: fixed;
+    top: 23.5px;
+    left: 0;
+    z-index: 1002; /* Ensure it's above the left panel */
+  }
+  .left-panel.open + .toggle-button {
+    opacity: 0;
+    left: -100px; /* Hide toggle button when the panel is open */
+  }
+  .right-panel h2 {
+    padding-left: 12px; /* Adjust heading padding */
+  }
+  .hide-menu-button {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 320px; /* Full width on mobile */
+    z-index: 1001;
+    margin-bottom: 0;
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+}
+/* Custom Modal Styles */
+.custom-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--custom-modal-background-color);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.custom-modal.show {
+  display: flex;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: var(--modal-content-background-color);
+  color: var(--modal-content-color);
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 20px var(--modal-content-shadow-color);
+  border: 1px solid var(--primary);
+  position: relative;
+  margin: 0 auto;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--primary);
+  background-color: var(--close-modal-button-background-color);
+  border-radius: 4px;
+  border: 1px solid var(--close-modal-button-border-color);
+  transition: all 0.2s;
+  line-height: 0;
+  padding-bottom: 4px;
+  z-index: 5;
+}
+
+.close-modal-btn:hover {
+  color: var(--hover-close-modal-button-color);
+  background-color: var(--hover-close-modal-button-background-color);
+  transform: scale(1.1);
+}
+
+#modalTitle {
+  margin-top: 0;
+  margin-right: 30px; /* Space for the X button */
+  background: linear-gradient(
+    to bottom,
+    var(--modal-title-background-gradient-top-color),
+    var(--modal-title-background-gradient-bottom-color)
+  );
+  color: var(--primary);
+  padding: 10px 15px;
+  border-radius: 4px 4px 0 0;
+  font-weight: bold;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+}
+
+#modalMessage {
+  margin-bottom: 22px;
+  line-height: 1.6;
+  color: var(--modal-message-color);
+  font-size: 16px;
+}
+
+#modalInputContainer {
+  margin-bottom: 24px;
+}
+
+#modalInput {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: var(--modal-input-background-color);
+  border: 1px solid var(--modal-input-border-color);
+  border-radius: 4px;
+  color: var(--primary);
+  font-family: talkoText, Arial, sans-serif;
+  font-size: 18px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+#modalInput:focus {
+  border-color: var(--focus-modal-input-border-color);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--focus-modal-input-shadow-color);
+}
+
+.input-error {
+  color: var(--input-error-color);
+  font-size: 14px;
+  margin: 8px 0 0;
+  display: none;
+  padding-left: 2px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-btn {
+  padding: 10px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 15px;
+  background-color: var(--modal-button-background-color);
+  color: var(--modal-button-color);
+  border: 1px solid var(--modal-button-border-color);
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.modal-confirm-btn {
+  background-color: var(--modal-confirm-button-background-color);
+  color: var(--modal-confirm-button-color);
+  border: 1px solid var(--primary);
+}
+
+.modal-confirm-btn:hover {
+  background-color: var(--primary);
+  color: var(--hover-modal-confirm-button-background-color);
+  transform: translateY(-2px);
+}
+
+.modal-btn:hover {
+  background-color: var(--hover-modal-button-background-color);
+  border-color: var(--hover-modal-button-border-color);
+  transform: translateY(-2px);
+}
+
+.modal-btn:active,
+.modal-confirm-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobile responsiveness */
+@media screen and (max-width: 768px) {
+  .custom-modal {
+    padding: 15px;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .custom-modal {
+    padding: 12px;
+  }
+
+  .modal-content {
+    padding: 18px;
+    width: 100%;
+    margin: 0 12px;
+    max-width: none;
+  }
+
+  #modalTitle {
+    font-size: 16px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+  }
+
+  #modalMessage {
+    font-size: 15px;
+    margin-bottom: 18px;
+  }
+
+  .modal-btn {
+    padding: 8px 14px;
+    font-size: 14px;
+    min-width: 70px;
+  }
+
+  #modalInput {
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .close-modal-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 24px;
+  }
+}
+
+.fa-discord {
+  margin-right: 10px;
+  color: var(--discord-icon-color);
+}
+
+.fa-users {
+  margin-right: 10px;
+  color: var(--community-icon-color); /* Warm orange for community/people */
+}
+
+.fa-info-circle {
+  margin-right: 10px;
+  color: var(--info-circle-icon-color); /* Info blue */
+}
+
+.fa-play-circle {
+  margin-right: 10px;
+  color: var(
+    --youtube-play-circle-icon-color
+  ); /* YouTube red for video/streaming */
+}
+
+.fa-th-large {
+  margin-right: 10px;
+  color: var(--app-directory-icon-color); /* Purple for apps/directory */
+}
+
+.fa-gift {
+  margin-right: 10px;
+  color: var(--donate-icon-color);
+}
+
+.fa-paintbrush {
+  margin-right: 10px;
+  background-image: linear-gradient(
+    82deg,
+    var(--themes-icon-gradient-left-color) 0%,
+    var(--themes-icon-gradient-middle-color) 50%,
+    var(--themes-icon-gradient-right-color) 100%
+  );
+  color: transparent;
+  background-clip: text;
+}
+
+/* Spectate button styling */
+.spectate-button {
+  background-color: var(--spectate-button-background-color) !important;
+  color: var(--spectate-button-color) !important;
+  border: 1px solid var(--primary) /* Orange border */ !important;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease; /* Smooth transition */
+}
+
+.spectate-button:hover {
+  background-color: var(--primary) !important;
+  color: var(--hover-spectate-button-color) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--hover-spectate-button-shadow-color);
+}
+
+.room.full .spectate-button {
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Room element styling for full rooms with spectators */
+.room.full {
+  border-left: 3px solid var(--primary);
+}
+
+.room.full .room-name {
+  color: var(--full-room-name-color);
+}
+
+/* Spectator count styling in room list */
+.room-name {
+  font-weight: bold;
+}
+
+/* Spectator indicator in room page */
+.spectator-indicator {
+  padding: 5px 10px;
+  background-color: var(--spectator-indicator-background-color);
+  color: var(--spectator-indicator-color);
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 12px;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* Spectator count in room navbar */
+.spectator-count {
+  font-size: 12px;
+  color: var(--spectator-count-color);
+  font-weight: bold;
+  padding: 2px 8px;
+  background-color: var(--spectator-count-background-color);
+  border-radius: 4px;
+  border: 1px solid var(--spectator-count-border-color);
+}
+
+/* Spectator notice styling */
+.spectator-notice {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--spectator-notice-background-color);
+  color: var(--spectator-notice-color);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px var(--spectator-notice-shadow-color);
+  z-index: 1000;
+  font-size: 14px;
+  animation: slideInFromRight 0.5s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Disabled input styling for spectators */
+.chat-input:not([contenteditable="true"]) {
+  background-color: var(
+    --spectator-disabled-chat-input-background-color
+  ) !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Disabled button styling for spectators */
+button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Spectator mode room type styling */
+.room-type.spectator {
+  background-color: var(--spectator-room-type-background-color);
+  color: var(--spectator-room-type-color);
+  font-weight: bold;
+}
+
+/* Enhanced enter button styling */
+.enter-button {
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+.enter-button:not(.spectate-button):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--enter-button-shadow-color);
+}
+
+/* Room list enhancements for spectator info */
+.users-detail {
+  margin-top: 5px;
+}
+
+.room-info {
+  flex: 1;
+}
+
+/* Spectator notification animations */
+@keyframes fadeInOut {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  10%,
+  90% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobile responsive adjustments for spectator features */
+@media (max-width: 768px) {
+  .spectator-notice {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .spectator-indicator {
+    font-size: 10px;
+    padding: 3px 6px;
+    margin-right: 5px;
+  }
+
+  .spectator-count {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}
+
+/* Spectator mode emotes button disabled styling */
+#emotesButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--disabled-emotes-button-background-color) !important;
+}
+
+/* Room navbar enhancements for spectator count */
+.second-navbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.second-navbar .spectator-count {
+  margin-left: auto;
+}
+
+.spectate-button:hover::after {
+  opacity: 1;
+}
+
+/* Enhanced room styling for full rooms */
+.room.full {
+  position: relative;
+  overflow: visible;
+}
+
+.room.full::before {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+/* ── Dev Lobby ─────────────────────────────────────────────────────────────── */
+
+.dev-access-code {
+  font-size: 12px;
+  color: #ff9800;
+  font-family: monospace;
+  margin-top: 2px;
+}
+
+.dev-lobby-badge {
+  width: 26px;
+  height: 26px;
+
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ── Profile picture card in the sign-in form ──
+   A light card, same family as the white inputs above it. The switch turns
+   the whole thing on; a segmented control below picks where the picture
+   comes from. */
+.pfp-card {
+  margin-bottom: 15px;
+  background-color: var(--tk-input-bg);
+  border-radius: var(--tk-radius, 5px);
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+  overflow: hidden;
+}
+
+.pfp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+/* The empty-avatar head, the way every profile app draws it. */
+.pfp-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e7e7e7;
+  color: #8d8d8d;
+}
+
+.pfp-ico i {
+  font-size: 14px;
+  margin: 0;
+}
+
+.pfp-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #111;
+  letter-spacing: 0.2px;
+}
+
+.pfp-preview {
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  border-radius: 4px;
+  background: #f1f1f1;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Toggle switch */
+.pfp-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+#logform .pfp-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.pfp-slider {
+  position: absolute;
+  inset: 0;
+  background: #c9c9c9;
+  border-radius: 22px;
+  transition: background 0.2s ease;
+}
+
+.pfp-slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.pfp-switch input:checked + .pfp-slider {
+  background: var(--tk-accent);
+}
+
+.pfp-switch input:checked + .pfp-slider::before {
+  transform: translateX(16px);
+}
+
+/* Expanded body: source picker plus whichever pane is active */
+.pfp-card-body {
+  padding: 11px 12px 12px;
+  border-top: 1px solid #ececec;
+}
+
+/* Keep the #logform prefix on the buttons: it overrides #logform button. */
+.pfp-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 11px;
+  background-color: #efefef;
+  border-radius: var(--tk-radius, 5px);
+}
+
+#logform .pfp-seg-btn {
+  position: static;
+  width: 100%;
+  margin: 0;
+  padding: 7px 8px;
+  background: none;
+  border: none;
+  border-radius: calc(var(--tk-radius, 5px) - 2px);
+  color: #666;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+#logform .pfp-seg-btn:hover {
+  background-color: #e2e2e2;
+  color: #111;
+  border-color: transparent;
+}
+
+#logform .pfp-seg-btn.active,
+#logform .pfp-seg-btn.active:hover {
+  background-color: var(--tk-accent);
+  color: #000;
+}
+
+#logform #pfpDiscordId {
+  margin-bottom: 9px;
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1px solid #c9c9c9;
+  border-radius: 4px;
+}
+
+#logform #pfpDiscordId:focus {
+  outline: none;
+  border-color: var(--tk-accent);
+}
+
+#logform .pfp-help-btn {
+  position: static;
+  width: auto;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--tk-accent);
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: var(--tk-font-main, talkoSS, Arial, sans-serif);
+}
+
+#logform .pfp-help-btn:hover {
+  background: none;
+  text-decoration: underline;
+  color: var(--accent-bright);
+}
+
+.pfp-help {
+  margin-top: 9px;
+  background: #f4f4f4;
+  border-radius: var(--tk-radius, 5px);
+  padding: 11px 13px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.55;
+}
+
+.pfp-help ol {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}
+
+.pfp-help li {
+  margin-bottom: 5px;
+}
+
+.pfp-help li::marker {
+  color: var(--tk-accent);
+  font-weight: bold;
+}
+
+.pfp-help p {
+  margin: 0;
+  opacity: 0.75;
+}
+
+/* Preset pictures */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: 232px;
+  overflow-y: auto;
+  /* Breathing room between the tiles and the scrollbar. */
+  padding-right: 6px;
+  /* Firefox and Chromium style the bar from these two; older WebKit falls
+     back to the pseudo-element rules below. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--tk-accent) transparent;
+}
+
+.preset-grid::-webkit-scrollbar {
+  width: 5px;
+}
+
+.preset-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preset-grid::-webkit-scrollbar-thumb {
+  background: var(--tk-accent);
+  border-radius: 999px;
+}
+
+.preset-grid.preset-empty {
+  display: block;
+  font-size: 12px;
+  color: #777;
+  padding: 4px 0;
+}
+
+/* Keep the #logform prefix: it overrides #logform button. */
+#logform .preset-grid .preset-opt {
+  position: relative;
+  box-sizing: border-box;
+  bottom: auto;
+  right: auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 4px;
+  border: 2px solid #e3e3e3;
+  border-radius: var(--tk-radius, 5px);
+  background: #fbfbfb;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
+}
+
+#logform .preset-grid .preset-opt img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+}
+
+#logform .preset-grid .preset-opt:hover {
+  border-color: var(--accent-bright);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+#logform .preset-grid .preset-opt:focus-visible {
+  outline: 2px solid var(--tk-accent);
+  outline-offset: 2px;
+}
+
+#logform .preset-grid .preset-opt.selected {
+  border-color: var(--tk-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tk-accent) 22%, transparent);
+}
+
+#logform .preset-grid .preset-opt.selected::after {
+  content: "\2713";
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--tk-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* Avatar shown next to names in the lobby room list */
+.lobby-pfp {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.fa-circle-question {
+  margin-right: 8px;
+}
+
+/* ── Unread badges on the Ideas & Bugs button ───────────────────────────────
+   What happened to YOUR posts since you last looked. Each count carries an
+   icon as well as a colour, because colour on its own is not a label - and
+   roughly one reader in twelve cannot tell the red from the green. */
+.ideas-card-btn.has-notif {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sb-notif {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sb-nb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 20px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.sb-nb > i {
+  font-size: 9px;
+}
+
+.sb-nb-approved {
+  background-color: #2e7d32;
+  color: #ffffff;
+}
+
+.sb-nb-declined {
+  background-color: #c62828;
+  color: #ffffff;
+}
+
+/* A reply is neither good nor bad news, so it stays neutral. */
+.sb-nb-reply {
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+/* ── Styles that used to be injected from lobby-client.js ───────────────────
+   Everything below is inert until the matching element exists: staff badges
+   and dev controls in the room list, the ticker and maintenance bars, the
+   paused-tab overlay, and the ban screen. */
+
+.mod-lobby-badge {
+  display: inline-block;
+  background: #00bcd4;
+  color: #003;
+  font-size: 8px;
+  font-weight: bold;
+  padding: 1px 4px;
+  border-radius: 6px;
+  margin: 0 4px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+.mod-lobby-badge.mod-lobby-badge-jr {
+  background: #ab47bc;
+  color: #fff;
+}
+
+.mod-lobby-badge.mod-lobby-badge-lead {
+  background: #77dd77;
+  color: #00220f;
+}
+
+.bot-lobby-badge {
+  display: inline-block;
+  background: var(--bot-flair, #9aa3ae);
+  color: #16191d;
+  font-size: 8px;
+  font-weight: bold;
+  padding: 1px 4px;
+  border-radius: 6px;
+  margin: 0 4px 0 0;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+.official-badge {
+  display: inline-block;
+  background: #ffd700;
+  color: #3a2c00;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-right: 6px;
+  letter-spacing: 0.5px;
+}
+
+.room.spotlight-room {
+  border: 1px solid #ffd700 !important;
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.25) inset;
+}
+
+.lobby-dev-controls {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.lobby-dev-btn {
+  flex: 1;
+  background: var(--tk-card);
+  color: var(--tk-accent);
+  border: 1px solid var(--tk-border);
+  border-radius: 4px;
+  padding: 6px 7px;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.lobby-dev-btn:hover {
+  border-color: var(--tk-accent);
+  background: var(--tk-accent);
+  color: #000;
+}
+
+#devPanelButton {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 99990;
+  background: var(--tk-card);
+  color: var(--tk-text);
+  border: 1px solid var(--tk-accent);
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  transition: background 0.2s, color 0.2s;
+  touch-action: none;
+  user-select: none;
+}
+
+#devPanelButton:hover {
+  background: var(--tk-accent);
+  color: #000;
+}
+
+#lobbyTickerBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99980;
+  background: #000000;
+  color: #ffffff;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  padding: 8px 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#lobbyTickerBar .tk-tick-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: tkTickerSpin linear infinite;
+}
+
+#lobbyTickerBar .tk-tick-item {
+  padding: 0 2.5rem;
+  white-space: nowrap;
+}
+
+#lobbyTickerBar.is-static {
+  padding: 8px 16px;
+}
+
+#lobbyTickerBar.is-static .tk-tick-track {
+  width: 100%;
+  justify-content: center;
+  animation: none;
+}
+
+#lobbyTickerBar.is-static .tk-tick-item {
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+#lobbyTickerBar.is-static .tk-tick-item + .tk-tick-item {
+  display: none;
+}
+
+#lobbyTickerBar:hover .tk-tick-track {
+  animation-play-state: paused;
+}
+
+@keyframes tkTickerSpin {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #lobbyTickerBar .tk-tick-track {
+    animation: none;
+    width: 100%;
+    justify-content: center;
+  }
+  #lobbyTickerBar .tk-tick-item {
+    padding: 0 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #lobbyTickerBar .tk-tick-item + .tk-tick-item {
+    display: none;
+  }
+}
+
+#lobbyMaintenanceBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99980;
+  background: #5c2d91;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 16px;
+  box-sizing: border-box;
+}
+
+/* Paused-tab overlay: shown when Fuckomatic opens in another tab. */
+#supersededOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000002;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+#supersededOverlay .ss-card {
+  max-width: 460px;
+  width: 100%;
+  background: #181818;
+  border: 1px solid var(--tk-border);
+  border-radius: 10px;
+  padding: 36px 30px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+#supersededOverlay .ss-icon {
+  font-size: 52px;
+  color: var(--tk-accent);
+  margin-bottom: 16px;
+}
+
+#supersededOverlay h1 {
+  color: var(--tk-accent);
+  font-size: 24px;
+  margin: 0 0 10px;
+}
+
+#supersededOverlay p {
+  color: #dddddd;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+
+#supersededOverlay button {
+  background: var(--tk-accent);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 26px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#supersededOverlay button:hover {
+  background: var(--accent-bright);
+}
+
+/* ── Ban screen ──
+   One column, centred: the wordmark, what is happening and for how long,
+   why, what is on record, and the appeal. Square corners, black cards on the
+   page background, thin #333 lines, orange for the one thing to press. */
+#banScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000001;
+  background: var(--tk-bg);
+  overflow: auto;
+  padding: 28px 16px 40px;
+  font-family: talkoSS, Arial, sans-serif;
+}
+
+/* The rules open from the ban screen, so they sit above it. */
+body:has(#banScreen) .tkm-overlay {
+  z-index: 1000002;
+}
+
+#banScreen .bs {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#banScreen .bs-brand {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--tk-accent);
+  letter-spacing: 0.5px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+#banScreen .bs-state {
+  background: #000;
+  border: 1px solid #333;
+  padding: 26px 20px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#banScreen .bs-icon {
+  font-size: 30px;
+  color: #ff5468;
+}
+
+#banScreen .bs-state.ok .bs-icon {
+  color: #57d9a3;
+}
+
+#banScreen .bs-state h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+#banScreen .bs-clock {
+  font-family: "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 40px;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+#banScreen .bs-line {
+  margin: 0;
+  color: #c3c3c3;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 44ch;
+}
+
+#banScreen .bs-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+#banScreen .bs-btn {
+  appearance: none;
+  background: var(--tk-tile);
+  border: 1px solid #333;
+  color: #fff;
+  padding: 11px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#banScreen .bs-btn:hover {
+  border-color: var(--tk-accent);
+}
+
+#banScreen .bs-btn.primary {
+  background: var(--tk-accent);
+  border-color: var(--tk-accent);
+  color: #000;
+}
+
+#banScreen .bs-btn.primary:hover {
+  background: var(--tk-accent-hover);
+}
+
+#banScreen .bs-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#banScreen .bs-card {
+  background: #000;
+  border: 1px solid #333;
+  padding: 14px 16px;
+}
+
+#banScreen .bs-k {
+  display: block;
+  color: var(--tk-accent);
+  font-size: 10.5px;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+#banScreen .bs-why-text {
+  margin: 0;
+  color: #e6e6e6;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#banScreen .bs-meta {
+  margin-top: 8px;
+  color: #8d8d8d;
+  font-size: 12.5px;
+}
+
+#banScreen .bs-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid #262626;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#banScreen .bs-row:first-of-type {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+#banScreen .bs-when {
+  flex: none;
+  min-width: 4.5rem;
+  color: #8d8d8d;
+  font-variant-numeric: tabular-nums;
+}
+
+#banScreen .bs-act {
+  color: #fff;
+  font-weight: bold;
+}
+
+#banScreen .bs-reason {
+  color: #c3c3c3;
+}
+
+#banScreen .bs-quote {
+  flex-basis: 100%;
+  color: #8d8d8d;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#banScreen .bs-none {
+  margin: 0;
+  color: #8d8d8d;
+  font-size: 13px;
+}
+
+#banScreen .bs-appeal {
+  background: #000;
+  border: 1px solid #333;
+}
+
+#banScreen .bs-appeal > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#banScreen .bs-appeal > summary::-webkit-details-marker {
+  display: none;
+}
+
+#banScreen .bs-appeal > summary i {
+  color: var(--tk-accent);
+}
+
+#banScreen .bs-appeal > summary::after {
+  content: "+";
+  margin-left: auto;
+  color: #8d8d8d;
+  font-weight: bold;
+}
+
+#banScreen .bs-appeal[open] > summary::after {
+  content: "\2013";
+}
+
+#banScreen .bs-status {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #8d8d8d;
+  border: 1px solid currentColor;
+  padding: 1px 6px;
+}
+
+#banScreen .bs-status.open {
+  color: #ffb454;
+}
+
+#banScreen .bs-status.lifted {
+  color: #57d9a3;
+}
+
+#banScreen .bs-status.declined {
+  color: #ff5468;
+}
+
+#banScreen #banAppealWrap {
+  padding: 0 16px 16px;
+}
+
+#banScreen .bs-foot {
+  margin: 0;
+  color: #8d8d8d;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+#banScreen .ban-appeal-h {
+  background: var(--tk-tile);
+  border-bottom: 1px solid #333;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0;
+  padding: 10px 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.2px;
+}
+
+#banScreen .ban-appeal-h i {
+  color: var(--tk-accent);
+  font-size: 12px;
+}
+
+#banScreen .ban-appeal-p {
+  color: #9a9a9a;
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 11px 13px 0;
+}
+
+#banScreen textarea#banAppealText {
+  width: calc(100% - 26px);
+  min-height: 74px;
+  resize: vertical;
+  background: #000;
+  color: #fff;
+  border: 1px solid var(--tk-border);
+  border-radius: 0;
+  padding: 10px 11px;
+  font-family: talkoSS, Arial, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  margin: 11px 13px 0;
+  display: block;
+}
+
+#banScreen textarea#banAppealText:focus {
+  outline: none;
+  border-color: var(--tk-accent);
+}
+
+#banScreen .ban-appeal-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 13px 13px;
+  flex-wrap: wrap;
+}
+
+#banScreen button#banAppealSend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--tk-accent);
+  color: #000;
+  border: none;
+  border-radius: 0;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#banScreen button#banAppealSend:hover {
+  background: var(--accent-bright);
+}
+
+#banScreen button#banAppealSend:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+#banScreen .ban-appeal-msg {
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+#banScreen .ban-appeal-msg.ok {
+  color: #57d9a3;
+}
+
+#banScreen .ban-appeal-msg.err {
+  color: #ff5468;
+}
+
+#banScreen .ban-appeal-done {
+  background: var(--tk-tile);
+  border: none;
+  border-left: 3px solid #57d9a3;
+  border-radius: 0;
+  padding: 13px;
+  color: #d7f3e7;
+  font-size: 13.5px;
+  line-height: 1.55;
+  text-align: left;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 11px 13px 13px;
+}
+
+#banScreen .ban-appeal-done i {
+  color: #57d9a3;
+  margin-top: 2px;
+}
+
+/* The appeal conversation. Bubbles: staff on the left with their face and
+   rank, you on the right. Nobody should have to work out who they are
+   talking to. */
+#banScreen .ac-log {
+  background: #000;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  padding: 12px 13px;
+  max-height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #3d3d3d transparent;
+}
+
+#banScreen .ac-log::-webkit-scrollbar {
+  width: 7px;
+}
+
+#banScreen .ac-log::-webkit-scrollbar-thumb {
+  background: #3d3d3d;
+  border-radius: 4px;
+}
+
+#banScreen .ac-m {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 88%;
+  margin-top: 12px;
+}
+
+#banScreen .ac-m:first-child {
+  margin-top: 0;
+}
+
+#banScreen .ac-m.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+#banScreen .ac-m.staff {
+  align-self: flex-start;
+}
+
+#banScreen .ac-who {
+  font-size: 11px;
+  color: #8d8d8d;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Who you are talking to: face, name, rank. */
+#banScreen .ac-av {
+  position: relative;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2b5e9e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#banScreen .ac-av.dev {
+  background: #a3323f;
+}
+
+#banScreen .ac-av-i {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Taken out once the picture is really there: a transparent avatar does not
+   cover the letter, so the initial showed through its gaps. */
+#banScreen .ac-av.has-pic .ac-av-i {
+  display: none;
+}
+
+#banScreen .ac-av img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#banScreen .ac-name {
+  color: #fff;
+  font-size: 12.5px;
+}
+
+#banScreen .ac-rank {
+  font-size: 9.5px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #5aa9ff;
+  border: 1px solid #5aa9ff;
+  padding: 1px 5px;
+}
+
+#banScreen .ac-rank.dev {
+  color: #ff5468;
+  border-color: #ff5468;
+}
+
+#banScreen .ac-b {
+  background: #262626;
+  padding: 9px 12px;
+  border-radius: 12px 12px 12px 3px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #ededed;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: left;
+  max-width: 100%;
+}
+
+#banScreen .ac-m.user .ac-b {
+  background: #7a4d05;
+  color: #fff;
+  border-radius: 12px 12px 3px 12px;
+}
+
+#banScreen .ac-q {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.6);
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+  padding-left: 7px;
+  margin-bottom: 5px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+#banScreen .ac-t {
+  font-size: 10.5px;
+  color: #6f6f6f;
+}
+
+#banScreen .ac-sys {
+  align-self: center;
+  max-width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #9a9a9a;
+  background: var(--tk-tile);
+  border: 1px solid #333;
+  padding: 6px 11px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+#banScreen .ac-reply {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--tk-tile);
+  border-left: 3px solid var(--tk-accent);
+  padding: 7px 10px;
+  margin: 11px 13px 0;
+  font-size: 12.5px;
+  color: #c3c3c3;
+  text-align: left;
+}
+
+#banScreen .ac-reply span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#banScreen .ac-reply button {
+  background: none;
+  border: none;
+  color: #8d8d8d;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
+#banScreen .ac-rbtn {
+  background: none;
+  border: none;
+  color: #6f6f6f;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+#banScreen .ac-rbtn:hover {
+  color: var(--tk-accent);
+}
+
+#banScreen .ac-closed {
+  background: var(--tk-tile);
+  border-left: 3px solid var(--tk-border);
+  padding: 11px 13px;
+  margin: 11px 13px 13px;
+  font-size: 12.5px;
+  color: #9a9a9a;
+  line-height: 1.55;
+  text-align: left;
+}
+
+@media (max-width: 520px) {
+  #banScreen {
+    padding: 18px 12px 32px;
+  }
+
+  #banScreen .bs-state {
+    padding: 20px 14px 18px;
+  }
+
+  #banScreen .bs-clock {
+    font-size: 32px;
+  }
+
+  #banScreen .bs-actions .bs-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #banScreen .ac-m {
+    max-width: 96%;
+  }
+}

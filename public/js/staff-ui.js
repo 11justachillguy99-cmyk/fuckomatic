@@ -1,0 +1,2133 @@
+// public/js/staff-ui.js
+// Shared staff UI kit used by the lobby, room, and the mod board.
+
+(function () {
+  if (window.StaffUI) return;
+
+  // ── styles (injected once; CSP allows inline styles) ──────────────────────
+  const CSS = `
+  .tk-backdrop *{box-sizing:border-box;}
+  .tk-backdrop{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.82);
+    display:flex;align-items:center;justify-content:center;
+    padding:16px;animation:tkFade .15s ease-out;box-sizing:border-box;}
+  @keyframes tkFade{from{opacity:0}to{opacity:1}}
+  @keyframes tkRise{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .tk-card{background:#202020;border:1px solid #616161;
+    border-radius:8px;width:100%;max-width:430px;max-height:88vh;display:flex;flex-direction:column;
+    box-shadow:0 18px 55px rgba(0,0,0,.6);animation:tkRise .18s ease-out;overflow:hidden;
+    box-sizing:border-box;font-family:inherit;color:#fff;}
+  .tk-card.tk-wide{max-width:560px;}
+  .tk-card.tk-xwide{max-width:960px;max-height:92vh;}
+  .tk-head{display:flex;align-items:center;gap:13px;padding:15px 18px;border-bottom:1px solid #616161;
+    background:linear-gradient(to bottom,#616161,#303030);}
+  .tk-head .tk-ico{font-size:18px;line-height:1;flex:none;width:42px;height:42px;display:flex;
+    align-items:center;justify-content:center;border-radius:8px;background:rgba(0,0,0,.3);
+    color:#ff9800;border:1px solid rgba(255,152,0,.5);}
+  .tk-head .tk-htext{flex:1;min-width:0;}
+  .tk-title{font-size:17px;font-weight:bold;color:#ff9800;margin:0;word-break:break-word;}
+  .tk-sub{font-size:12.5px;color:#ededed;margin:3px 0 0;line-height:1.45;word-break:break-word;}
+  .tk-x{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;
+    padding:0 6px;border-radius:4px;flex:none;}
+  .tk-x:hover{color:#000;background:#ff9800;}
+  .tk-body{padding:16px 18px;overflow-y:auto;overflow-x:hidden;font-size:14px;line-height:1.55;color:#fff;}
+  .tk-body p{margin:0 0 10px;word-break:break-word;}
+  .tk-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid #616161;flex-wrap:wrap;}
+  .tk-btn{appearance:none;border:1px solid transparent;background:#1b1b1b;color:#fff;border-radius:5px;
+    padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;font-family:inherit;transition:all .15s;max-width:100%;}
+  .tk-btn:hover{background:#242424;border-color:#616161;}
+  .tk-btn.tk-primary{background:#ff9800;border-color:#ff9800;color:#000;}
+  .tk-btn.tk-primary:hover{background:#ffad33;border-color:#ffad33;color:#000;}
+  .tk-btn.tk-danger{background:#000;border-color:#616161;color:#ff5468;}
+  .tk-btn.tk-danger:hover{background:#ff5468;border-color:#ff5468;color:#1a0005;}
+  .tk-btn.tk-ghost{background:transparent;}
+  .tk-field{margin:0 0 14px;}
+  .tk-field:last-child{margin-bottom:0;}
+  .tk-label{display:block;font-size:12px;font-weight:bold;color:#ff9800;margin:0 0 6px;}
+  .tk-input,.tk-textarea,.tk-select{width:100%;background:#000;color:#fff;
+    border:1px solid #616161;border-radius:5px;padding:10px 12px;font-size:14px;font-family:inherit;
+    outline:none;transition:border-color .12s;}
+  .tk-textarea{min-height:84px;resize:vertical;line-height:1.5;}
+  .tk-writeup .tk-textarea{min-height:64px;}
+  .tk-wu-head{background:#1b1b1b;border:1px solid #333;padding:8px 10px;margin-bottom:12px;}
+  .tk-wu-what{font-weight:bold;color:#fff;font-size:13px;}
+  .tk-wu-quote{margin-top:4px;color:#d0d0d0;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+  .tk-input:focus,.tk-textarea:focus,.tk-select:focus{border-color:#ff9800;}
+  .tk-help{font-size:11.5px;color:#8d8d8d;margin:6px 0 0;word-break:break-word;}
+  .tk-checkbox-row{display:flex;align-items:center;gap:9px;cursor:pointer;
+    color:#fff;font-size:13.5px;user-select:none;}
+  .tk-checkbox-row input{accent-color:#ff9800;width:16px;height:16px;flex:none;margin:0;}
+  .tk-err{font-size:12px;color:#ff5468;margin:6px 0 0;display:none;}
+  /* Staff key reveal: masked until asked for, monospace once shown */
+  .tk-keybox{display:flex;gap:8px;align-items:center;background:#000;border:1px solid #616161;
+    border-radius:5px;padding:10px 12px;margin:10px 0 0;}
+  .tk-keyval{flex:1;min-width:0;font-family:"Courier New",monospace;font-size:13px;color:#8d8d8d;
+    letter-spacing:2px;word-break:break-all;}
+  .tk-keyval.revealed{color:#ff9800;letter-spacing:0;}
+  .tk-keyeye{flex:none;padding:6px 12px;font-size:12px;}
+  /* menu */
+  .tk-group{margin:4px 0 18px;}
+  .tk-group:last-child{margin-bottom:0;}
+  /* Cream section strip, same as the lobby's "Be Known As..." bar and the
+     dashboard's section headers, so every staff surface reads the same. */
+  .tk-gtitle{font-size:12.5px;font-weight:bold;letter-spacing:.3px;
+    color:#000;background:#fdf5e6;margin:0 0 10px;padding:7px 12px;border-radius:5px;}
+  .tk-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#1b1b1b;
+    border:1px solid transparent;border-radius:5px;padding:11px 12px;margin:0 0 6px;cursor:pointer;
+    transition:border-color .15s,background .15s;font-family:inherit;color:#fff;}
+  .tk-item:last-child{margin-bottom:0;}
+  .tk-item:hover{background:#242424;border-color:#ff9800;}
+  .tk-item:disabled{opacity:.45;cursor:not-allowed;}
+  .tk-item .tk-iico{font-size:15px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+    border-radius:5px;flex:none;background:rgba(255,152,0,.12);color:#ff9800;}
+  .tk-item .tk-itxt{flex:1;min-width:0;}
+  .tk-item .tk-ilabel{font-size:14px;font-weight:bold;color:#fff;word-break:break-word;}
+  .tk-item .tk-idesc{font-size:12px;color:#9a9a9a;margin-top:2px;line-height:1.4;word-break:break-word;}
+  button.tk-item::after{content:"›";color:#616161;font-size:19px;line-height:1;flex:none;font-weight:bold;margin-left:2px;transition:color .15s;}
+  button.tk-item:hover::after{color:#ff9800;}
+  .tk-item.tk-d .tk-ilabel{color:#ff8a8e;}
+  .tk-item.tk-d:hover{border-color:#ff5468;background:#241416;}
+  button.tk-item.tk-d:hover::after{color:#ff5468;}
+  .tk-iico.t-default{background:rgba(255,152,0,.12);color:#ff9800;}
+  .tk-iico.t-danger{background:rgba(255,84,104,.14);color:#ff5468;}
+  .tk-iico.t-info{background:rgba(90,169,255,.15);color:#5aa9ff;}
+  .tk-iico.t-success{background:rgba(87,217,163,.14);color:#57d9a3;}
+  .tk-iico.t-warn{background:rgba(255,180,84,.15);color:#ffb454;}
+  .tk-iico.t-broadcast{background:rgba(192,139,255,.16);color:#c08bff;}
+  .tk-iico.t-dev{background:rgba(255,84,104,.15);color:#ff5468;}
+  .tk-iico.t-mod{background:rgba(90,169,255,.15);color:#5aa9ff;}
+  .tk-iico.t-jr{background:rgba(192,139,255,.16);color:#c08bff;}
+  .tk-iico.t-lead{background:rgba(119,221,119,.15);color:#77dd77;}
+  /* Rank chips match the room flair and the dashboard: dev red, mod leader
+     green, full mod blue, junior mod purple. */
+  .tk-chip{display:inline-block;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:4px;
+    letter-spacing:.4px;vertical-align:middle;}
+  .tk-chip.dev{background:#ff5468;color:#1a0005;}
+  .tk-chip.lead{background:#77dd77;color:#00220f;}
+  .tk-chip.mod{background:#5aa9ff;color:#001229;}
+  .tk-chip.jr{background:#c08bff;color:#16002b;}
+  /* toasts */
+  .tk-toasts,.tk-toast,.tk-toast *{box-sizing:border-box;}
+  .tk-toasts{position:fixed;top:14px;right:14px;left:auto;z-index:100002;display:flex;flex-direction:column;
+    gap:10px;max-width:340px;}
+  .tk-toasts.tk-full{left:14px;right:14px;max-width:none;align-items:center;}
+  /* Square: the coloured left edge is what says what kind of message this is,
+     and a rounded corner clips it into a sliver. */
+  .tk-toast{position:relative;background:#1b1b1b;border:1px solid #333;border-left:4px solid #ff9800;
+    border-radius:0;padding:13px 14px 15px;box-shadow:0 10px 30px rgba(0,0,0,.55);
+    animation:tkToastIn .18s ease-out;overflow:hidden;
+    color:#fff;font-size:14px;line-height:1.5;display:flex;gap:11px;align-items:flex-start;width:100%;}
+  @keyframes tkToastIn{from{transform:translateX(14px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .tk-toast.tk-tout{opacity:0;transform:translateX(14px);transition:opacity .15s ease,transform .15s ease;}
+  .tk-toasts.tk-full .tk-toast{max-width:680px;}
+  /* Coloured edge + matching icon so the kind of message reads instantly */
+  .tk-toast .tk-tico{flex:none;width:28px;height:28px;border-radius:5px;display:flex;
+    align-items:center;justify-content:center;font-size:14px;}
+  .tk-toast.info{border-left-color:#5aa9ff;}
+  .tk-toast.info .tk-tico{background:rgba(90,169,255,.15);color:#5aa9ff;}
+  .tk-toast.info .tk-ttitle{color:#5aa9ff;}
+  .tk-toast.success{border-left-color:#57d9a3;}
+  .tk-toast.success .tk-tico{background:rgba(87,217,163,.15);color:#57d9a3;}
+  .tk-toast.success .tk-ttitle{color:#57d9a3;}
+  .tk-toast.warning{border-left-color:#ffb454;}
+  .tk-toast.warning .tk-tico{background:rgba(255,180,84,.15);color:#ffb454;}
+  .tk-toast.warning .tk-ttitle{color:#ffb454;}
+  .tk-toast.error{border-left-color:#ff5468;}
+  .tk-toast.error .tk-tico{background:rgba(255,84,104,.15);color:#ff5468;}
+  .tk-toast.error .tk-ttitle{color:#ff5468;}
+  .tk-toast .tk-ttext{flex:1;min-width:0;word-break:break-word;}
+  .tk-toast .tk-ttitle{font-weight:bold;font-size:14px;margin-bottom:2px;}
+  .tk-toast .tk-tbody{color:#d6d6d6;font-size:13.5px;}
+  .tk-toast .tk-tx{background:none;border:none;color:#8d8d8d;cursor:pointer;font-size:18px;line-height:1;
+    padding:0 2px;flex:none;border-radius:4px;}
+  .tk-toast .tk-tx:hover{color:#fff;}
+  /* Time remaining, so a toast never just vanishes without warning. Hovering
+     or focusing the toast pauses it (WCAG 2.2.1, timing adjustable). */
+  .tk-toast .tk-tbar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08);}
+  .tk-toast .tk-tfill{height:100%;width:100%;transform-origin:left center;background:currentColor;
+    animation-name:tkToastBar;animation-timing-function:linear;animation-fill-mode:forwards;}
+  .tk-toast.info .tk-tfill{color:#5aa9ff;}
+  .tk-toast.success .tk-tfill{color:#57d9a3;}
+  .tk-toast.warning .tk-tfill{color:#ffb454;}
+  .tk-toast.error .tk-tfill{color:#ff5468;}
+  @keyframes tkToastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  @media (prefers-reduced-motion: reduce){
+    .tk-toast{animation:none;}
+    .tk-toast .tk-tfill{animation:none;transform:scaleX(1);opacity:.4;}
+  }
+  /* sliding staff panel: right drawer / bottom sheet / centered window */
+  .tk-panel{background:#202020;color:#fff;display:flex;
+    flex-direction:column;box-sizing:border-box;font-family:inherit;}
+  .tk-panel *{box-sizing:border-box;}
+  .tk-pl-drawer{position:fixed;top:0;right:0;height:100vh;height:100dvh;width:380px;max-width:96vw;
+    border-left:2px solid #ff9800;z-index:99999;transform:translateX(100%);transition:transform .22s ease;
+    box-shadow:-16px 0 42px rgba(0,0,0,.5);}
+  .tk-pl-drawer.tk-pl-in{transform:translateX(0);}
+  .tk-pl-sheet{width:100%;max-height:88vh;max-height:88dvh;border-top:2px solid #ff9800;
+    border-radius:8px 8px 0 0;transform:translateY(100%);transition:transform .24s ease;
+    box-shadow:0 -14px 42px rgba(0,0,0,.5);}
+  .tk-pl-sheet.tk-pl-in{transform:translateY(0);}
+  .tk-pl-center{position:relative;width:100%;max-width:440px;max-height:86vh;border:1px solid #616161;
+    border-radius:8px;overflow:hidden;transform:translateY(10px);opacity:0;
+    transition:transform .18s ease,opacity .18s ease;box-shadow:0 18px 55px rgba(0,0,0,.6);}
+  .tk-pl-center.tk-pl-in{transform:translateY(0);opacity:1;}
+  .tk-pl-back{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.66);display:flex;opacity:0;
+    transition:opacity .16s ease;box-sizing:border-box;}
+  .tk-pl-back.tk-pl-in{opacity:1;}
+  .tk-pl-back-center{align-items:center;justify-content:center;padding:16px;}
+  .tk-pl-back-sheet{align-items:flex-end;justify-content:center;}
+  .tk-phead{position:relative;display:flex;align-items:center;gap:11px;padding:16px 14px;
+    border-bottom:1px solid #616161;background:linear-gradient(to bottom,#616161,#303030);}
+  .tk-pl-sheet .tk-phead{padding-top:20px;}
+  .tk-pl-sheet .tk-phead::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    width:40px;height:4px;border-radius:2px;background:rgba(0,0,0,.4);}
+  .tk-pico{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;
+    border-radius:8px;font-size:18px;background:rgba(0,0,0,.3);color:#ff9800;border:1px solid rgba(255,152,0,.5);}
+  .tk-phtext{flex:1;min-width:0;}
+  .tk-ptitle{font-size:16px;font-weight:bold;color:#ff9800;word-break:break-word;}
+  .tk-psub{font-size:12px;color:#ededed;margin-top:1px;word-break:break-word;}
+  .tk-pbtn{background:rgba(0,0,0,.25);border:none;color:#fff;cursor:pointer;font-size:15px;line-height:1;width:32px;
+    height:32px;border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+  .tk-pbtn:hover{color:#000;background:#ff9800;}
+  .tk-px{font-size:21px;}
+  .tk-pbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px;}
+  .tk-pl-sheet .tk-pbody{padding-bottom:26px;}
+  .tk-presize{position:absolute;left:0;top:0;bottom:0;width:9px;margin-left:-5px;cursor:ew-resize;z-index:2;
+    transition:background .12s;}
+  .tk-presize:hover{background:linear-gradient(90deg,rgba(255,152,0,.3),transparent);}
+  .tk-pop{position:fixed;z-index:99990;width:390px;max-width:calc(100vw - 20px);background:#202020;
+    border:1px solid #616161;border-radius:8px;box-shadow:0 18px 55px rgba(0,0,0,.65);color:#fff;
+    font-family:inherit;font-size:13px;line-height:1.45;display:flex;flex-direction:column;
+    max-height:min(72vh,620px);animation:tkRise .16s ease-out;box-sizing:border-box;}
+  .tk-pop *{box-sizing:border-box;}
+  .tk-pop-arrow{position:absolute;width:12px;height:12px;background:#202020;border:1px solid #616161;
+    transform:rotate(45deg);left:26px;z-index:2;}
+  .tk-pop.tk-pop-above .tk-pop-arrow{bottom:-7px;border-top:none;border-left:none;}
+  .tk-pop.tk-pop-below .tk-pop-arrow{top:-7px;border-bottom:none;border-right:none;
+    background:linear-gradient(135deg,#616161,#4a4a4a);}
+  .tk-pop-head{display:flex;align-items:flex-start;gap:10px;padding:12px 12px 10px 14px;
+    border-bottom:1px solid #616161;background:linear-gradient(to bottom,#616161,#303030);
+    border-radius:8px 8px 0 0;}
+  .tk-pop-who{flex:1;min-width:0;}
+  .tk-pop-name{font-size:15px;font-weight:bold;color:#ff9800;word-break:break-word;line-height:1.25;}
+  .tk-pop-name .tk-pop-off{font-size:11px;font-weight:normal;color:#cfcfcf;margin-left:6px;}
+  .tk-pop-aka{margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+  .tk-pop-aka .tk-pop-akal{font-size:11px;color:#cfcfcf;margin-right:2px;}
+  .tk-pop-aka span.tk-pop-chip{font-size:11px;padding:1px 7px;border-radius:10px;background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.14);color:#ededed;max-width:150px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;}
+  .tk-pop-x{background:rgba(0,0,0,.25);border:none;color:#fff;font-size:19px;line-height:1;width:28px;height:28px;
+    border-radius:4px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;}
+  .tk-pop-x:hover{background:#ff9800;color:#000;}
+  .tk-pop-status{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;}
+  .tk-pop-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:bold;
+    padding:3px 9px;border-radius:12px;letter-spacing:.2px;}
+  .tk-pop-pill.ok{background:rgba(87,217,163,.16);color:#57d9a3;border:1px solid rgba(87,217,163,.4);}
+  .tk-pop-pill.bad{background:rgba(255,84,104,.16);color:#ff8a8e;border:1px solid rgba(255,84,104,.45);}
+  .tk-pop-pill.warn{background:rgba(255,180,84,.16);color:#ffb454;border:1px solid rgba(255,180,84,.45);}
+  .tk-pop-pill.dim{background:rgba(255,255,255,.06);color:#cfcfcf;border:1px solid rgba(255,255,255,.14);
+    font-weight:normal;}
+  .tk-pop-tenure{margin:10px 12px 0;border:1px solid #333;border-radius:6px;background:#1b1b1b;font-size:12px;color:#d6d6d6;}
+  .tk-pop-trow{display:flex;gap:10px;padding:5px 10px;border-top:1px solid #2c2c2c;align-items:baseline;}
+  .tk-pop-trow:first-child{border-top:none;}
+  .tk-pop-tlabel{flex:0 0 96px;color:#9a9a9a;font-size:11px;letter-spacing:.2px;text-transform:uppercase;}
+  .tk-pop-tval{flex:1;min-width:0;line-height:1.4;}
+  .tk-pop-tval b{color:#fff;font-weight:bold;}
+  .tk-pop-tval em{font-style:normal;color:#8d8d8d;font-size:11px;}
+  .tk-pop-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px 12px 0;}
+  .tk-pop-tile{background:#1b1b1b;border:1px solid #333;border-radius:6px;padding:7px 4px 6px;text-align:center;}
+  .tk-pop-tile b{display:block;font-size:17px;line-height:1.1;color:#fff;}
+  .tk-pop-tile span{display:block;font-size:10.5px;color:#9a9a9a;margin-top:2px;letter-spacing:.2px;}
+  .tk-pop-tile.hot b{color:#ff8a8e;}
+  .tk-pop-now{margin:10px 12px 0;padding:9px 11px;border-radius:6px;background:rgba(255,84,104,.09);
+    border:1px solid rgba(255,84,104,.35);font-size:12.5px;}
+  .tk-pop-now b{color:#ff8a8e;}
+  .tk-pop-now .tk-pop-nowsub{color:#d6d6d6;margin-top:2px;font-size:12px;}
+  .tk-pop-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 8px;min-height:120px;
+    scrollbar-width:thin;scrollbar-color:#616161 #161616;}
+  .tk-pop-list::-webkit-scrollbar{width:9px;}
+  .tk-pop-list::-webkit-scrollbar-track{background:#161616;}
+  .tk-pop-list::-webkit-scrollbar-thumb{background:#616161;border-radius:5px;border:2px solid #161616;}
+  .tk-pop-list::-webkit-scrollbar-thumb:hover{background:#ff9800;}
+  .tk-pop-empty{color:#9a9a9a;font-size:12.5px;text-align:center;padding:16px 8px 12px;}
+  .tk-pop-row{display:flex;gap:10px;padding:7px 0;border-top:1px solid #2c2c2c;align-items:flex-start;}
+  .tk-pop-row:first-child{border-top:none;padding-top:2px;}
+  .tk-pop-dot{flex:none;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;
+    justify-content:center;font-size:11.5px;margin-top:1px;background:rgba(255,152,0,.12);color:#ff9800;}
+  .tk-pop-row.k-block .tk-pop-dot{background:rgba(255,84,104,.14);color:#ff5468;}
+  .tk-pop-row.k-warn .tk-pop-dot{background:rgba(255,180,84,.15);color:#ffb454;}
+  .tk-pop-row.k-unblock .tk-pop-dot{background:rgba(87,217,163,.14);color:#57d9a3;}
+  .tk-pop-row.k-appeal .tk-pop-dot{background:rgba(90,169,255,.15);color:#5aa9ff;}
+  .tk-pop-row.k-report .tk-pop-dot{background:rgba(192,139,255,.16);color:#c08bff;}
+  .tk-pop-row.k-identity .tk-pop-dot{background:rgba(255,255,255,.07);color:#bdbdbd;}
+  .tk-pop-row.k-identity .tk-pop-what{color:#d6d6d6;font-weight:normal;}
+  .tk-pop-row.k-staffwork .tk-pop-dot{background:rgba(119,221,119,.14);color:#77dd77;}
+  .tk-pop-row.k-staffwork .tk-pop-what .tk-pop-tag{font-size:10px;font-weight:bold;letter-spacing:.4px;
+    padding:1px 6px;border-radius:4px;background:#77dd77;color:#00220f;margin-right:6px;vertical-align:middle;}
+  .tk-pop-main{flex:1;min-width:0;}
+  .tk-pop-what{font-weight:bold;color:#fff;font-size:13px;word-break:break-word;}
+  .tk-pop-what .tk-pop-by{font-weight:normal;color:#9a9a9a;}
+  .tk-pop-row.k-block .tk-pop-what{color:#ff8a8e;}
+  .tk-pop-row.k-unblock .tk-pop-what{color:#57d9a3;}
+  .tk-pop-why{color:#c9c9c9;font-size:12px;margin-top:1px;word-break:break-word;}
+  .tk-pop-quote{margin-top:3px;padding:3px 8px;border-left:2px solid #444;color:#a9a9a9;font-size:11.5px;
+    font-style:italic;white-space:pre-wrap;word-break:break-word;max-height:54px;overflow:hidden;}
+  .tk-pop-when{flex:none;color:#8d8d8d;font-size:11px;margin-top:2px;white-space:nowrap;}
+  .tk-pop-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 9px;
+    border-top:1px solid #616161;font-size:11px;color:#8d8d8d;}
+  .tk-pop-foot .tk-btn{padding:6px 11px;font-size:12px;}
+  .tk-pop-loading{padding:26px 12px;text-align:center;color:#9a9a9a;font-size:12.5px;}
+  @media (max-width:576px){
+    .tk-pop{left:6px !important;right:6px !important;top:auto !important;bottom:6px !important;
+      width:auto;max-width:none;max-height:76vh;border-radius:8px;}
+    .tk-pop-arrow{display:none;}
+  }
+  @media (max-width:640px){
+    .tk-presize{display:none;}
+  }
+  @media (max-width:520px){
+    .tk-backdrop{padding:10px;align-items:flex-end;}
+    .tk-card{max-width:100%;max-height:92vh;border-radius:8px 8px 0 0;}
+    .tk-foot{justify-content:stretch;}
+    .tk-foot .tk-btn{flex:1;}
+    .tk-toasts{top:8px;right:8px;left:8px;max-width:none;}
+  }
+  `;
+  const style = document.createElement("style");
+  style.id = "tk-staff-ui-styles";
+  style.textContent = CSS;
+  (document.head || document.documentElement).appendChild(style);
+
+  function escape(s) {
+    return String(s == null ? "" : s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  }
+
+  function el(tag, props, children) {
+    const e = document.createElement(tag);
+    if (props)
+      for (const k in props) {
+        if (k === "class") e.className = props[k];
+        else if (k === "text") e.textContent = props[k];
+        else if (k === "html")
+          e.innerHTML = props[k];
+        else if (k.startsWith("on") && typeof props[k] === "function")
+          e.addEventListener(k.slice(2).toLowerCase(), props[k]);
+        else if (props[k] != null) e.setAttribute(k, props[k]);
+      }
+    if (children)
+      (Array.isArray(children) ? children : [children]).forEach((c) => {
+        if (c == null) return;
+        e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      });
+    return e;
+  }
+
+  function iconNode(val, cls) {
+    const s = String(val == null ? "" : val);
+    return /^\s*<i\b/.test(s)
+      ? el("div", { class: cls, html: s })
+      : el("div", { class: cls, text: s });
+  }
+
+  const TONE_BY_ICON = {
+    ban: "danger",
+    bomb: "danger",
+    trash: "danger",
+    "user-slash": "danger",
+    gavel: "danger",
+    bullhorn: "warn",
+    lock: "warn",
+    "fire-extinguisher": "warn",
+    "triangle-exclamation": "warn",
+    "user-secret": "warn",
+    "screwdriver-wrench": "warn",
+    gauge: "info",
+    "chart-simple": "info",
+    flag: "info",
+    globe: "info",
+    list: "info",
+    clipboard: "info",
+    snowflake: "info",
+    unlock: "info",
+    "magnifying-glass": "info",
+    "circle-info": "info",
+    "user-plus": "success",
+    "user-shield": "success",
+    "lock-open": "success",
+    "circle-check": "success",
+    "tower-broadcast": "broadcast",
+    newspaper: "broadcast",
+    "champagne-glasses": "broadcast",
+    star: "broadcast",
+    ghost: "dev",
+    crown: "dev",
+  };
+  const TONE_SKIP = new Set([
+    "solid",
+    "regular",
+    "brands",
+    "light",
+    "thin",
+    "duotone",
+    "sharp",
+    "fw",
+    "lg",
+    "sm",
+    "xs",
+    "spin",
+    "pulse",
+    "beat",
+    "fade",
+  ]);
+  function iconTone(icon) {
+    const re = /fa-([a-z0-9-]+)/gi;
+    let m;
+    while ((m = re.exec(String(icon == null ? "" : icon)))) {
+      if (!TONE_SKIP.has(m[1])) return TONE_BY_ICON[m[1]] || "default";
+    }
+    return "default";
+  }
+
+  let openCount = 0;
+
+  function modal(opts) {
+    const o = opts || {};
+    const backdrop = el("div", { class: "tk-backdrop" });
+    const card = el("div", {
+      class:
+        "tk-card" + (o.xwide ? " tk-xwide" : o.wide ? " tk-wide" : ""),
+    });
+
+    const head = el("div", { class: "tk-head" });
+    if (o.icon) head.appendChild(iconNode(o.icon, "tk-ico"));
+    const htext = el("div", { class: "tk-htext" });
+    htext.appendChild(el("div", { class: "tk-title", text: o.title || "" }));
+    if (o.subtitle)
+      htext.appendChild(el("div", { class: "tk-sub", text: o.subtitle }));
+    head.appendChild(htext);
+    const xBtn = el("button", { class: "tk-x", text: "×", title: "Close" });
+    if (!o.locked) head.appendChild(xBtn);
+    card.appendChild(head);
+
+    const body = el("div", { class: "tk-body" });
+    if (typeof o.body === "string") body.appendChild(el("p", { text: o.body }));
+    else if (o.body) body.appendChild(o.body);
+    card.appendChild(body);
+
+    let foot = null;
+    if (o.actions && o.actions.length) {
+      foot = el("div", { class: "tk-foot" });
+      o.actions.forEach((a) => {
+        const b = el("button", {
+          class:
+            "tk-btn" +
+            (a.kind === "primary"
+              ? " tk-primary"
+              : a.kind === "danger"
+                ? " tk-danger"
+                : a.kind === "ghost"
+                  ? " tk-ghost"
+                  : ""),
+          text: a.label,
+        });
+        b.addEventListener("click", () => {
+          if (a.onClick && a.onClick() === false) return;
+          close();
+        });
+        foot.appendChild(b);
+      });
+      card.appendChild(foot);
+    }
+
+    function close() {
+      backdrop.remove();
+      document.removeEventListener("keydown", onKey);
+      openCount = Math.max(0, openCount - 1);
+      if (o.onClose) o.onClose();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        if (!o.locked) close();
+      }
+    }
+    xBtn.addEventListener("click", close);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop && o.dismissable !== false && !o.locked) close();
+    });
+    document.addEventListener("keydown", onKey);
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+    openCount++;
+    return { close, card, body };
+  }
+
+  function alert(title, message, icon) {
+    return new Promise((res) => {
+      modal({
+        title,
+        icon: icon || '<i class="fas fa-circle-info"></i>',
+        body: message,
+        dismissable: true,
+        onClose: res,
+        actions: [{ label: "OK", kind: "primary", onClick: () => {} }],
+      });
+    });
+  }
+
+  function confirm(opts) {
+    const o = typeof opts === "string" ? { message: opts } : opts || {};
+    return new Promise((res) => {
+      let answered = false;
+      modal({
+        title: o.title || "Are you sure?",
+        icon:
+          o.icon ||
+          (o.danger
+            ? '<i class="fas fa-triangle-exclamation"></i>'
+            : '<i class="fas fa-circle-question"></i>'),
+        subtitle: o.subtitle,
+        body: o.message,
+        onClose: () => {
+          if (!answered) res(false);
+        },
+        actions: [
+          {
+            label: o.cancelText || "Cancel",
+            kind: "ghost",
+            onClick: () => {
+              answered = true;
+              res(false);
+            },
+          },
+          {
+            label: o.confirmText || "Confirm",
+            kind: o.danger ? "danger" : "primary",
+            onClick: () => {
+              answered = true;
+              res(true);
+            },
+          },
+        ],
+      });
+    });
+  }
+
+  function prompt(opts) {
+    const o = opts || {};
+    const fields = o.fields || [
+      { name: "value", label: o.label || "Value", placeholder: o.placeholder },
+    ];
+    return new Promise((res) => {
+      const form = el("form", { class: "tk-form" });
+      if (o.message) form.appendChild(el("p", { text: o.message }));
+      const inputs = {};
+      const helps = {};
+      fields.forEach((f) => {
+        const wrap = el("div", { class: "tk-field" });
+        if (f.type === "checkbox") {
+          const cb = el("input", { type: "checkbox", class: "tk-checkbox" });
+          cb.checked = !!f.value;
+          const row = el("label", { class: "tk-checkbox-row" });
+          row.appendChild(cb);
+          if (f.label) row.appendChild(el("span", { text: f.label }));
+          wrap.appendChild(row);
+          inputs[f.name] = cb;
+          if (f.help)
+            wrap.appendChild(el("div", { class: "tk-help", text: f.help }));
+          form.appendChild(wrap);
+          return;
+        }
+        if (f.label)
+          wrap.appendChild(el("label", { class: "tk-label", text: f.label }));
+        let input;
+        if (f.type === "textarea") {
+          input = el("textarea", {
+            class: "tk-textarea",
+            placeholder: f.placeholder || "",
+            maxlength: f.maxLength,
+            rows: f.rows,
+          });
+          if (f.value) input.value = f.value;
+        } else if (f.type === "select") {
+          input = el("select", { class: "tk-select" });
+          (f.options || []).forEach((opt) => {
+            const ov = typeof opt === "string" ? opt : opt.value;
+            const ol = typeof opt === "string" ? opt : opt.label;
+            const o2 = el("option", { value: ov, text: ol });
+            if (f.value === ov) o2.selected = true;
+            input.appendChild(o2);
+          });
+        } else {
+          input = el("input", {
+            class: "tk-input",
+            type: f.type || "text",
+            placeholder: f.placeholder || "",
+            maxlength: f.maxLength,
+          });
+          if (f.value != null) input.value = f.value;
+        }
+        inputs[f.name] = input;
+        wrap.appendChild(input);
+        if (f.help != null) {
+          helps[f.name] = el("div", { class: "tk-help", text: f.help });
+          wrap.appendChild(helps[f.name]);
+        }
+        form.appendChild(wrap);
+      });
+      // A field can react to another: the rule picker sets the block length.
+      fields.forEach((f) => {
+        if (typeof f.onChange !== "function" || !inputs[f.name]) return;
+        const fire = () => f.onChange(inputs[f.name].value, inputs, helps);
+        inputs[f.name].addEventListener("change", fire);
+        if (inputs[f.name].value) fire();
+      });
+      const errEl = el("div", { class: "tk-err" });
+      form.appendChild(errEl);
+
+      let answered = false;
+      const submit = () => {
+        const values = {};
+        for (const f of fields) {
+          if (f.type === "checkbox") {
+            values[f.name] = inputs[f.name].checked;
+            continue;
+          }
+          const v = inputs[f.name].value;
+          if (f.required && !String(v).trim()) {
+            errEl.textContent = `${f.label || f.name} is required.`;
+            errEl.style.display = "block";
+            inputs[f.name].focus();
+            return false;
+          }
+          values[f.name] = v;
+        }
+        answered = true;
+        res(
+          fields.length === 1 && fields[0].name === "value"
+            ? values.value
+            : values,
+        );
+        return true;
+      };
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (submit()) ctrl.close();
+      });
+
+      const ctrl = modal({
+        title: o.title || "Input",
+        icon: o.icon || '<i class="fas fa-pen"></i>',
+        subtitle: o.subtitle,
+        wide: o.wide,
+        body: form,
+        onClose: () => {
+          if (!answered) res(null);
+        },
+        actions: [
+          { label: o.cancelText || "Cancel", kind: "ghost", onClick: () => {} },
+          {
+            label: o.confirmText || "Submit",
+            kind: o.danger ? "danger" : "primary",
+            onClick: () => submit(),
+          },
+        ],
+      });
+      setTimeout(() => {
+        const first = inputs[fields[0].name];
+        if (first) first.focus();
+      }, 50);
+    });
+  }
+
+  function renderGroups(groups, getClose, closeOnClick) {
+    const wrap = el("div");
+    (groups || []).forEach((g) => {
+      const gEl = el("div", { class: "tk-group" });
+      if (g.title)
+        gEl.appendChild(el("div", { class: "tk-gtitle", text: g.title }));
+      (g.items || []).forEach((it) => {
+        const btn = el("button", {
+          class: "tk-item" + (it.danger ? " tk-d" : ""),
+          type: "button",
+        });
+        if (it.id) btn.id = it.id;
+        if (it.disabled) btn.disabled = true;
+        const tone = it.tone || (it.danger ? "danger" : iconTone(it.icon));
+        btn.appendChild(iconNode(it.icon || "•", "tk-iico t-" + tone));
+        const tx = el("div", { class: "tk-itxt" });
+        tx.appendChild(el("div", { class: "tk-ilabel", text: it.label }));
+        if (it.desc)
+          tx.appendChild(el("div", { class: "tk-idesc", text: it.desc }));
+        btn.appendChild(tx);
+        btn.addEventListener("click", () => {
+          if (closeOnClick && !it.keepOpen) {
+            const c = getClose && getClose();
+            if (c) c();
+          }
+          if (it.onClick) it.onClick();
+        });
+        gEl.appendChild(btn);
+      });
+      wrap.appendChild(gEl);
+    });
+    return wrap;
+  }
+
+  function menu(opts) {
+    const o = opts || {};
+    let ctrl;
+    const wrap = renderGroups(o.groups, () => ctrl && ctrl.close, true);
+    const actions = [];
+    if (o.onHelp)
+      actions.push({
+        label: "Help",
+        kind: "ghost",
+        onClick: () => {
+          o.onHelp();
+          return false;
+        },
+      });
+    actions.push({ label: "Close", kind: "ghost", onClick: () => {} });
+    ctrl = modal({
+      title: o.title || "Menu",
+      icon: o.icon || '<i class="fas fa-screwdriver-wrench"></i>',
+      subtitle: o.subtitle,
+      wide: o.wide,
+      body: wrap,
+      actions,
+    });
+    return ctrl;
+  }
+
+  const PANEL_MODE_KEY = "fuckomatic_staffMenuMode";
+  const PANEL_WIDTH_KEY = "fuckomatic_staffDrawerW";
+  let activePanel = null;
+  function isNarrow() {
+    return window.matchMedia("(max-width:640px)").matches;
+  }
+  function panelMode() {
+    try {
+      const m = localStorage.getItem(PANEL_MODE_KEY);
+      if (m === "modal" || m === "drawer") return m;
+    } catch (_) {}
+    return "drawer";
+  }
+  function setPanelMode(m) {
+    try {
+      localStorage.setItem(PANEL_MODE_KEY, m);
+    } catch (_) {}
+  }
+  function drawerWidth() {
+    let w = 380;
+    try {
+      w = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10) || 380;
+    } catch (_) {}
+    return Math.max(300, Math.min(560, w));
+  }
+  function saveDrawerWidth(w) {
+    try {
+      localStorage.setItem(PANEL_WIDTH_KEY, String(Math.round(w)));
+    } catch (_) {}
+  }
+
+  function panel(opts) {
+    if (activePanel) {
+      activePanel.close();
+      return null;
+    }
+    const o = opts || {};
+    const mode = isNarrow()
+      ? "sheet"
+      : panelMode() === "modal"
+        ? "center"
+        : "drawer";
+    let closed = false;
+    let root = null;
+    const panelEl = el("div", { class: "tk-panel tk-pl-" + mode });
+
+    function fireLayout() {
+      if (o.onLayoutChange) {
+        try {
+          o.onLayoutChange();
+        } catch (_) {}
+      }
+    }
+    function close() {
+      if (closed) return;
+      closed = true;
+      activePanel = null;
+      document.removeEventListener("keydown", onKey);
+      panelEl.classList.remove("tk-pl-in");
+      if (root) root.classList.remove("tk-pl-in");
+      if (mode === "drawer") {
+        document.documentElement.classList.remove("tk-drawer-open");
+        fireLayout();
+        setTimeout(fireLayout, 240);
+      }
+      setTimeout(() => {
+        const node = root || panelEl;
+        if (node && node.parentNode) node.parentNode.removeChild(node);
+      }, 230);
+      if (o.onClose) o.onClose();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") {
+        if (openCount > 0) return;
+        e.stopPropagation();
+        close();
+      }
+    }
+
+    const head = el("div", { class: "tk-phead" });
+    if (o.icon) head.appendChild(iconNode(o.icon, "tk-pico"));
+    const htext = el("div", { class: "tk-phtext" });
+    htext.appendChild(
+      el("div", { class: "tk-ptitle", text: o.title || "Staff tools" }),
+    );
+    if (o.subtitle)
+      htext.appendChild(el("div", { class: "tk-psub", text: o.subtitle }));
+    head.appendChild(htext);
+    if (!isNarrow()) {
+      const tg = el("button", {
+        class: "tk-pbtn",
+        type: "button",
+        title:
+          mode === "drawer"
+            ? "Switch to a centered window"
+            : "Dock to the right",
+      });
+      tg.innerHTML =
+        mode === "drawer"
+          ? '<i class="fas fa-window-maximize"></i>'
+          : '<i class="fas fa-table-columns"></i>';
+      tg.addEventListener("click", () => {
+        setPanelMode(mode === "drawer" ? "modal" : "drawer");
+        close();
+        setTimeout(() => panel(o), 250);
+      });
+      head.appendChild(tg);
+    }
+    if (o.onHelp) {
+      const hb = el("button", {
+        class: "tk-pbtn",
+        type: "button",
+        title: "Help",
+      });
+      hb.innerHTML = '<i class="fas fa-circle-question"></i>';
+      hb.addEventListener("click", () => o.onHelp());
+      head.appendChild(hb);
+    }
+    const xb = el("button", {
+      class: "tk-pbtn tk-px",
+      type: "button",
+      text: "×",
+      title: "Close",
+    });
+    xb.addEventListener("click", close);
+    head.appendChild(xb);
+    panelEl.appendChild(head);
+
+    const body = el("div", { class: "tk-pbody" });
+    body.appendChild(renderGroups(o.groups, () => close, false));
+    panelEl.appendChild(body);
+
+    if (mode === "drawer") {
+      const rh = el("div", { class: "tk-presize", title: "Drag to resize" });
+      let dragging = false,
+        startX = 0,
+        startW = 0;
+      rh.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        startX = e.clientX;
+        startW = panelEl.offsetWidth;
+        try {
+          rh.setPointerCapture(e.pointerId);
+        } catch (_) {}
+        e.preventDefault();
+      });
+      rh.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        let w = startW + (startX - e.clientX);
+        w = Math.max(300, Math.min(560, w));
+        panelEl.style.width = w + "px";
+        document.documentElement.style.setProperty("--tk-drawer-w", w + "px");
+        fireLayout();
+      });
+      const end = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        try {
+          rh.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+        saveDrawerWidth(panelEl.offsetWidth);
+        fireLayout();
+        setTimeout(fireLayout, 60);
+      };
+      rh.addEventListener("pointerup", end);
+      rh.addEventListener("pointercancel", end);
+      panelEl.appendChild(rh);
+    }
+
+    activePanel = { close };
+
+    if (mode === "drawer") {
+      const w = drawerWidth();
+      panelEl.style.width = w + "px";
+      document.documentElement.style.setProperty("--tk-drawer-w", w + "px");
+      document.body.appendChild(panelEl);
+      document.documentElement.classList.add("tk-drawer-open");
+      requestAnimationFrame(() => panelEl.classList.add("tk-pl-in"));
+      fireLayout();
+      setTimeout(fireLayout, 240);
+    } else {
+      root = el("div", { class: "tk-pl-back tk-pl-back-" + mode });
+      root.appendChild(panelEl);
+      root.addEventListener("click", (e) => {
+        if (e.target === root && o.dismissable !== false) close();
+      });
+      document.body.appendChild(root);
+      requestAnimationFrame(() => {
+        root.classList.add("tk-pl-in");
+        panelEl.classList.add("tk-pl-in");
+      });
+    }
+    document.addEventListener("keydown", onKey);
+    return { close };
+  }
+
+  let toastHost = null;
+  function ensureHost(full) {
+    if (!toastHost) {
+      toastHost = el("div", { class: "tk-toasts" });
+      document.body.appendChild(toastHost);
+    }
+    toastHost.className = "tk-toasts" + (full ? " tk-full" : "");
+    return toastHost;
+  }
+  const TOAST_ICON = {
+    success: "fa-circle-check",
+    error: "fa-circle-exclamation",
+    warning: "fa-triangle-exclamation",
+    info: "fa-circle-info",
+  };
+
+  function toastDuration(type, text, title) {
+    if (type === "error") return 0;
+    const words = String((title || "") + " " + (text || "")).trim().split(/\s+/)
+      .length;
+    return Math.min(14000, Math.max(5000, 2200 + words * 380));
+  }
+
+  function toast(message, opts) {
+    const o = opts || {};
+    // notify.js owns the look site-wide; the code below is the fallback for
+    // a page that has not loaded it.
+    if (window.TkNotify) {
+      const n = window.TkNotify.show(o.type || "info", message, o);
+      return n ? n.element : null;
+    }
+    const host = ensureHost(o.fullWidth);
+    const type = o.type || "info";
+    const body = String(message == null ? "" : message);
+    const t = el("div", { class: "tk-toast " + type });
+    t.setAttribute("role", type === "error" ? "alert" : "status");
+    t.setAttribute("aria-live", type === "error" ? "assertive" : "polite");
+    t.setAttribute("aria-atomic", "true");
+
+    t.appendChild(
+      iconNode(
+        '<i class="fas ' + (TOAST_ICON[type] || TOAST_ICON.info) + '"></i>',
+        "tk-tico",
+      ),
+    );
+
+    const txt = el("div", { class: "tk-ttext" });
+    if (o.title)
+      txt.appendChild(el("div", { class: "tk-ttitle", text: o.title }));
+    if (body) txt.appendChild(el("div", { class: "tk-tbody", text: body }));
+    t.appendChild(txt);
+
+    const x = el("button", { class: "tk-tx", text: "×" });
+    x.setAttribute("aria-label", "Dismiss");
+    const close = () => {
+      t.classList.add("tk-tout");
+      setTimeout(() => t.remove(), 160);
+    };
+    x.addEventListener("click", close);
+    t.appendChild(x);
+
+    const ms = o.timeout != null ? o.timeout : toastDuration(type, body, o.title);
+    if (ms > 0) {
+      const bar = el("div", { class: "tk-tbar" });
+      const fill = el("div", { class: "tk-tfill" });
+      fill.style.animationDuration = ms + "ms";
+      bar.appendChild(fill);
+      t.appendChild(bar);
+
+      let timer = null;
+      let startedAt = 0;
+      let left = ms;
+      const start = () => {
+        startedAt = Date.now();
+        fill.style.animationPlayState = "running";
+        timer = setTimeout(close, left);
+      };
+      const hold = () => {
+        if (!timer) return;
+        clearTimeout(timer);
+        timer = null;
+        left = Math.max(600, left - (Date.now() - startedAt));
+        fill.style.animationPlayState = "paused";
+      };
+      t.addEventListener("mouseenter", hold);
+      t.addEventListener("focusin", hold);
+      t.addEventListener("mouseleave", start);
+      t.addEventListener("focusout", start);
+      host.appendChild(t);
+      start();
+      return t;
+    }
+
+    host.appendChild(t);
+    return t;
+  }
+
+  function actionToast(d) {
+    if (!d) return;
+    const who = d.username || d.name || null;
+    const target = who ? '"' + who + '"' : "that user";
+    const A = d.action || "action";
+
+    if (!d.ok) {
+      toast(d.error || "The server refused it. You may not have the level for this action, or the user has already gone.", {
+        type: "error",
+        title: "Could not " + A,
+      });
+      return;
+    }
+
+    if (A === "wipe buffer") {
+      toast(
+        d.text
+          ? (d.textWiped ? "They had already cleared it. It said: " : "It said: ") +
+              '"' +
+              d.text +
+              '"'
+          : "Their box was already empty.",
+        { type: "success", title: "Wiped" },
+      );
+      return;
+    }
+
+    let title = null;
+    let body = null;
+    switch (A) {
+      case "kick":
+        title = d.ban ? "Kicked and room-banned" : "Kicked";
+        body = d.ban
+          ? target + " was removed and cannot rejoin this room."
+          : target + " was removed from the room. They can rejoin.";
+        break;
+      case "ip block":
+        title = "Blocked";
+        body =
+          (who ? target : "That user") +
+          " was disconnected and cannot reconnect for " +
+          (d.duration === "permanent" ? "good" : d.duration || "a while") +
+          (d.rangeApplied
+            ? ". Their whole network range is covered, so a neighbouring address will not get them back in."
+            : ". This covers one address only.");
+        break;
+      case "ban ip":
+        title = d.placed > 1 ? d.placed + " blocks placed" : "Block placed";
+        body =
+          "They take effect now, for " +
+          (d.duration === "permanent" ? "good" : d.duration || "a while") +
+          (d.rangeApplied ? ", covering whole ranges." : ".") +
+          (d.skipped
+            ? " " +
+              d.skipped +
+              (d.skipped === 1 ? " entry was" : " entries were") +
+              " skipped: not an address, a range, or a client id."
+            : "");
+        break;
+      case "unblock ip":
+        title = d.removed ? "Unbanned" : "Nothing to unban";
+        body = d.removed
+          ? "They can connect again straight away."
+          : "That block had already expired or been lifted.";
+        break;
+      case "set block duration":
+        title = "Ban re-timed";
+        body = "The countdown restarts from now.";
+        break;
+      case "set block message":
+        title = "Ban message saved";
+        body = "They will see it on the ban screen next time they try to connect.";
+        break;
+      case "warn":
+        title = "Warning sent";
+        body = target + " has been told. It is recorded in the audit log.";
+        break;
+      case "rename":
+        title = "Name reset";
+        body = "They are now shown as Anonymous.";
+        break;
+      case "reset location":
+        title = "Location reset";
+        body = 'Their location is back to "On The Web".';
+        break;
+      case "turn pfp off":
+        title = "Profile picture removed";
+        body = "They cannot put it back until staff allow it again.";
+        break;
+      case "allow pfp":
+        title = "Profile picture allowed";
+        body = "They can set one again.";
+        break;
+      case "rename room":
+        title = "Room renamed";
+        body = d.name ? 'It is now "' + d.name + '".' : "Everyone in it was told.";
+        break;
+      case "lock room":
+        title = d.locked ? "Room locked" : "Room unlocked";
+        body = d.locked
+          ? "Nobody new can join. People already inside stay."
+          : "Anyone can join again.";
+        break;
+      case "slow mode":
+        title = d.enabled ? "Slow mode on" : "Slow mode off";
+        body = d.enabled
+          ? "The room updates more slowly for everyone."
+          : "The room updates at normal speed again.";
+        break;
+      case "close room":
+        title = "Room closed";
+        body = "Everyone was removed and the room is gone.";
+        break;
+      case "wipe buffer":
+        title = "Text wiped";
+        body = "What they had typed is gone from every screen.";
+        break;
+      case "set note":
+        title = "Note saved";
+        body = "Other staff will see it on their row.";
+        break;
+      case "clear note":
+        title = "Note cleared";
+        break;
+      case "revoke mod":
+        title = "Mod key revoked";
+        body = "Their access was removed immediately.";
+        break;
+      case "review application":
+        title = "Application reviewed";
+        body = "The applicant has been told the outcome.";
+        break;
+      default:
+        title = A.charAt(0).toUpperCase() + A.slice(1);
+        body = "Done.";
+    }
+    toast(body, { type: "success", title });
+  }
+
+  function copy(text) {
+    try {
+      if (navigator.clipboard) return navigator.clipboard.writeText(text);
+    } catch (_) {}
+    return Promise.resolve();
+  }
+
+  // ── Help: what every tool does and how to use it ─────────────────────────
+  // ── Help: what every tool does, and the lowest rank that may use it ──────
+  const HELP = [
+    {
+      title: "Per-user actions (tap a user's row in a room)",
+      items: [
+        [
+          "History (tap the name)",
+          "jr",
+          "Works on users and on other staff. The block they are serving, then everything in order: sign-ins and renames, blocks, warnings, kicks, appeals and reports, across every name and device they have used. Look here before you act.",
+        ],
+        [
+          "Wipe typed text",
+          "jr",
+          "Clears what the user has typed from everyone's screen. The fastest way to pull a slur off the page.",
+        ],
+        [
+          "Reset name to Anonymous",
+          "jr",
+          "Resets an offensive username.",
+        ],
+        [
+          "Reset location",
+          "jr",
+          "Puts an offensive location line back to \"On The Web\".",
+        ],
+        [
+          "Turn profile picture off",
+          "jr",
+          "Removes their picture and stops them re-adding it until staff allow it again.",
+        ],
+        [
+          "Warn",
+          "jr",
+          "Sends a private warning to one user, a heads up before you kick.",
+        ],
+        [
+          "Kick from room",
+          "jr",
+          "Removes the user from the room. They can come back, so pair it with a warning.",
+        ],
+        [
+          "Kick + room ban",
+          "jr",
+          "Removes the user and bans them from that room so they can't rejoin.",
+        ],
+        [
+          "IP block",
+          "mod",
+          "Blocks the user's device and network and disconnects them. 1 hour to 1 month, or permanent; only an admin can lift a permanent block. A person serves one block: a second block on any of their devices or addresses stretches every block they have to the longest one, never two clocks, and one appeal covers the lot.",
+        ],
+        [
+          "Freeze / unfreeze",
+          "dev",
+          "Locks the user's input server-side so they can't type, without kicking them.",
+        ],
+      ],
+    },
+    {
+      title: "Room controls (Staff button in the room top bar)",
+      items: [
+        [
+          "Clear Talkoboard",
+          "jr",
+          "Wipes the shared drawing board for the room.",
+        ],
+        [
+          "Rename room",
+          "jr",
+          "Fixes a bad or misleading room name. Everyone in the room is told, and it is logged.",
+        ],
+        [
+          "Lock room",
+          "jr",
+          "Blocks new joins; people already inside stay. Good for calming a raid.",
+        ],
+        [
+          "Slow mode",
+          "jr",
+          "Throttles how fast the room updates for everyone.",
+        ],
+        [
+          "Close room",
+          "mod",
+          "Kicks everyone and deletes the room (for slur names / spam farms).",
+        ],
+        [
+          "Megaphone (this room)",
+          "dev",
+          "Shows an announcement banner to everyone in the room.",
+        ],
+        ["Party mode", "dev", "Confetti + party horn for the whole room."],
+        [
+          "Spotlight",
+          "dev",
+          "Pins the room to the top of the lobby with an Official badge.",
+        ],
+        [
+          "Server HUD",
+          "dev",
+          "Live overlay of sockets / rooms / heap / solo-TTL.",
+        ],
+      ],
+    },
+    {
+      title: "Boards (Mod Dashboard)",
+      items: [
+        [
+          "Reports",
+          "jr",
+          "The report queue. Anyone on staff can respond with a warning or a kick; discarding a report and blocking are full-mod actions.",
+        ],
+        [
+          "Appeals",
+          "mod",
+          "Ban appeals. Full mods run the conversation and dismiss; lifting a ban is admin-only.",
+        ],
+        [
+          "Applications",
+          "leader",
+          "Who applies to join the team. Mod leaders open and close intake, approve as junior (L1), or decline.",
+        ],
+        [
+          "Ban list",
+          "mod",
+          "Every active block, grouped per person, with one-tap unban.",
+        ],
+        [
+          "Mod records",
+          "leader",
+          "Any junior or full mod's full action history and abuse flags. Leader records are an admin matter.",
+        ],
+      ],
+    },
+    {
+      title: "Lobby / global (Admin Panel button in the lobby)",
+      items: [
+        [
+          "Grant a junior (L1) key",
+          "leader",
+          "Mod leaders approve applicants and hand out junior keys; admins can mint any level.",
+        ],
+        [
+          "Promote, demote, revoke",
+          "leader",
+          "Leaders move people between L1 and L2 and can remove them, live. Leader keys themselves are an admin decision.",
+        ],
+        [
+          "Lobby ticker",
+          "dev",
+          "Editable banner at the top of the lobby, changeable live.",
+        ],
+        [
+          "Megaphone (everywhere)",
+          "dev",
+          "Broadcasts an announcement to every room and the lobby.",
+        ],
+        [
+          "Feature flags",
+          "dev",
+          "Toggle the word filter, room creation, and room limit at runtime.",
+        ],
+        [
+          "Maintenance mode",
+          "dev",
+          "Blocks new rooms and joins with a friendly message for safe deploys.",
+        ],
+        [
+          "Spectate",
+          "mod",
+          "Watch any room read-only without taking a slot or appearing.",
+        ],
+        [
+          "Clear blacklist / unblock IP",
+          "dev",
+          "Lifts bot-blacklist entries or a specific block.",
+        ],
+        ["Nuke", "dev", "Emergency clear of ALL rooms. Requires confirmation."],
+      ],
+    },
+    {
+      title: "Accountability",
+      items: [
+        [
+          "Mod Dashboard",
+          "jr",
+          "Every staff action and every username / name change, live. Keeps everyone honest, including you.",
+        ],
+      ],
+    },
+  ];
+
+  const RANK_BY_ROLE = {
+    dev: { level: 4, chip: "ADMIN", title: "Fuckomatic Admin", name: "Admin" },
+    lead: { level: 3, chip: "LEADER", title: "Mod Leader (L3)", name: "Mod leader" },
+    leader: { level: 3, chip: "LEADER", title: "Mod Leader (L3)", name: "Mod leader" },
+    mod: { level: 2, chip: "MOD", title: "Moderator (L2)", name: "Moderator" },
+    full: { level: 2, chip: "MOD", title: "Moderator (L2)", name: "Moderator" },
+    jr: { level: 1, chip: "JR MOD", title: "Junior Moderator (L1)", name: "Junior moderator" },
+  };
+
+  function rank(roleOrLevel) {
+    if (typeof roleOrLevel === "number")
+      return roleOrLevel >= 4
+        ? RANK_BY_ROLE.dev
+        : roleOrLevel >= 3
+          ? RANK_BY_ROLE.lead
+          : roleOrLevel === 1
+            ? RANK_BY_ROLE.jr
+            : RANK_BY_ROLE.mod;
+    return RANK_BY_ROLE[roleOrLevel] || RANK_BY_ROLE.mod;
+  }
+
+  function help(role) {
+    const RANKS = {
+      jr: { n: 1, chip: "jr", label: "All staff", icon: "fa-shield-halved" },
+      mod: { n: 2, chip: "mod", label: "Full mod", icon: "fa-shield-halved" },
+      leader: { n: 3, chip: "lead", label: "Mod leader", icon: "fa-user-shield" },
+      dev: { n: 4, chip: "dev", label: "Admin only", icon: "fa-crown" },
+    };
+    const mine = RANKS[role] ? RANKS[role].n : 1;
+    const wrap = el("div");
+    wrap.appendChild(
+      el("p", {
+        text:
+          mine >= 4
+            ? "You are an admin, so everything below is available to you."
+            : mine === 3
+              ? "You are a mod leader (L3). Items marked Admin only are restricted to admins."
+              : mine === 2
+                ? "You are a full mod (L2). Items marked Mod leader or Admin only are restricted to the levels above you."
+                : "You are a junior mod (L1). Items marked Full mod, Mod leader, or Admin only are not available to you yet; they are listed so you can see what the next level adds.",
+      }),
+    );
+    HELP.forEach((sec) => {
+      const g = el("div", { class: "tk-group" });
+      g.appendChild(el("div", { class: "tk-gtitle", text: sec.title }));
+      sec.items.forEach(([name, who, desc]) => {
+        const r = RANKS[who] || RANKS.jr;
+        const locked = r.n > mine;
+        const row = el("div", {
+          class: "tk-item",
+          style: "cursor:default" + (locked ? ";opacity:.5" : ""),
+        });
+        row.appendChild(
+          iconNode(
+            '<i class="fas ' + r.icon + '"></i>',
+            "tk-iico t-" + r.chip,
+          ),
+        );
+        const tx = el("div", { class: "tk-itxt" });
+        const labelRow = el("div", { class: "tk-ilabel" });
+        labelRow.appendChild(document.createTextNode(name + "  "));
+        labelRow.appendChild(
+          el("span", { class: "tk-chip " + r.chip, text: r.label }),
+        );
+        tx.appendChild(labelRow);
+        tx.appendChild(el("div", { class: "tk-idesc", text: desc }));
+        row.appendChild(tx);
+        g.appendChild(row);
+      });
+      wrap.appendChild(g);
+    });
+    return modal({
+      title: "Staff help",
+      icon: '<i class="fas fa-book-open"></i>',
+      subtitle: "What each tool does and how to use it",
+      wide: true,
+      body: wrap,
+      actions: [{ label: "Got it", kind: "primary", onClick: () => {} }],
+    });
+  }
+
+  // ── Community-rule picker for report and block prompts ────────────────────
+  let communityRules = null;
+
+  function fetchCommunityRules(sock) {
+    return new Promise((resolve) => {
+      if (communityRules) return resolve(communityRules);
+      const s = sock || window.socket;
+      if (!s || !s.connected) return resolve(null);
+      const timer = setTimeout(done, 1500);
+      function done(d) {
+        clearTimeout(timer);
+        s.off("rules data", done);
+        if (d && Array.isArray(d.community) && d.community.length)
+          communityRules = d.community;
+        resolve(communityRules);
+      }
+      s.on("rules data", done);
+      s.emit("rules get");
+    });
+  }
+
+  async function communityRuleField(opts) {
+    const o = opts || {};
+    const list = await fetchCommunityRules(o.socket);
+    if (!list || !list.length) return null;
+    const options = [
+      { value: "", label: o.required ? "Pick the rule" : "No specific rule" },
+    ];
+    list.forEach((r, i) => {
+      if (!r || !r.title) return;
+      options.push({
+        value: "Rule " + (i + 1) + " - " + r.title,
+        label: i + 1 + ". " + r.title,
+      });
+    });
+    return {
+      name: "rule",
+      label: o.required ? "Which rule did they break?" : "Broke a rule? (optional)",
+      type: "select",
+      value: "",
+      required: !!o.required,
+      options,
+    };
+  }
+
+  function ruleReason(rule, text) {
+    const t = String(text || "").trim();
+    if (!rule) return t;
+    return t ? rule + ". " + t : rule + ".";
+  }
+
+  // ── Block lengths and the one dialog every block goes through ─────────────
+  // Same ladder as server/durations.js; change both.
+  const DURATIONS = [
+    { value: "1h", label: "1 hour" },
+    { value: "6h", label: "6 hours" },
+    { value: "24h", label: "1 day" },
+    { value: "3d", label: "3 days" },
+    { value: "7d", label: "1 week" },
+    { value: "30d", label: "1 month" },
+    { value: "permanent", label: "Permanent" },
+  ];
+
+  function durationOptions(allowPermanent) {
+    return DURATIONS.filter((d) => allowPermanent !== false || d.value !== "permanent");
+  }
+
+  function durationLabel(value) {
+    const d = DURATIONS.find((x) => x.value === value);
+    return d ? d.label : String(value || "");
+  }
+
+  function ruleValue(r, i) {
+    return "Rule " + (i + 1) + " - " + r.title;
+  }
+
+  // Rule first, then a length the rule suggests, then a note. The suggestion
+  // is a starting point: the moderator picks the length that fits.
+  // Resolves to { duration, reason, values } or null.
+  async function blockDialog(opts) {
+    const o = opts || {};
+    const rules = (await fetchCommunityRules(o.socket)) || [];
+    const byValue = new Map(rules.map((r, i) => [ruleValue(r, i), r]));
+    const options = durationOptions(o.allowPermanent);
+    const fallback = options.some((d) => d.value === o.duration) ? o.duration : "24h";
+    const fields = (o.extraFields || []).concat([
+      {
+        name: "rule",
+        label: "Which rule did they break?",
+        type: "select",
+        value: "",
+        required: true,
+        options: [{ value: "", label: "Pick the rule" }].concat(
+          rules.map((r, i) => ({ value: ruleValue(r, i), label: i + 1 + ". " + r.title })),
+        ),
+        onChange: (value, inputs, helps) => {
+          const r = byValue.get(value);
+          if (!r) return;
+          if (r.block && r.block !== "none" && options.some((d) => d.value === r.block))
+            inputs.duration.value = r.block;
+          if (helps.duration)
+            helps.duration.textContent = r.response
+              ? "Usual response: " + r.response
+              : r.block === "none"
+                ? "This rule does not usually end in a block."
+                : "";
+        },
+      },
+      {
+        name: "duration",
+        label: "How long",
+        type: "select",
+        value: fallback,
+        options,
+        help: "",
+      },
+      {
+        name: "note",
+        label: "Note (optional)",
+        type: "textarea",
+        maxLength: 500,
+        value: o.note || "",
+        placeholder: o.notePlaceholder || "What you saw, in a line. The person reads this on the ban screen.",
+      },
+    ]);
+    const res = await prompt({
+      title: o.title || "Block",
+      icon: '<i class="fas fa-ban"></i>',
+      subtitle: o.subtitle,
+      message: o.message,
+      fields,
+      danger: true,
+      confirmText: o.confirmText || "Place block",
+    });
+    if (!res) return null;
+    return {
+      duration: res.duration,
+      reason: ruleReason(res.rule, res.note),
+      values: res,
+    };
+  }
+
+  // ── Write-ups for long blocks ─────────────────────────────────────────────
+  const TRIED_OPTIONS = [
+    { value: "", label: "Pick one" },
+    { value: "warned-me", label: "I warned them first" },
+    { value: "warned-other", label: "Somebody else warned them" },
+    { value: "kicked", label: "They were kicked first" },
+    { value: "rules", label: "They were shown the rules" },
+    { value: "nothing", label: "Nothing. This needed a block straight away" },
+  ];
+
+  function triedLabel(v) {
+    const o = TRIED_OPTIONS.find((t) => t.value === v);
+    return o && o.value ? o.label : "Not said";
+  }
+
+  // The four answers as plain lines, for anywhere a write-up is shown.
+  function writeupLines(j) {
+    if (!j) return [];
+    const f = j.fields || j;
+    const lines = [
+      "What they did: " + (f.did || ""),
+      "Rule " + (j.rule || f.rule || "?"),
+      "Tried first: " + triedLabel(f.tried) + (f.why ? ". " + f.why : ""),
+      "Why this length: " + (f.length || ""),
+    ];
+    (j.addenda || []).forEach((a) =>
+      lines.push("Added " + new Date(a.at).toLocaleString() + ": " + a.text),
+    );
+    return lines;
+  }
+
+  // The write-up owed after a 7-day or permanent block. Locked: it stays until
+  // the server accepts it. The draft survives a reload.
+  async function writeup(info, opts) {
+    const o = opts || {};
+    const rules = (await fetchCommunityRules(o.socket)) || [];
+    const draftKey = "fuckomatic_writeup_" + info.entryId;
+    let draft = {};
+    try {
+      draft = JSON.parse(localStorage.getItem(draftKey) || "{}") || {};
+    } catch (_) {}
+
+    return new Promise((resolve) => {
+      const form = el("form", { class: "tk-form tk-writeup" });
+      const head = el("div", { class: "tk-wu-head" });
+      head.appendChild(
+        el("div", {
+          class: "tk-wu-what",
+          text: (info.action || "block") + " on " + (info.target || "somebody"),
+        }),
+      );
+      if (info.quote)
+        head.appendChild(
+          el("div", { class: "tk-wu-quote", text: "They had typed: " + info.quote }),
+        );
+      form.appendChild(head);
+      form.appendChild(
+        el("p", {
+          text: "The block is already in place. Write up why it deserved this, so whoever handles the appeal or reads your record can see what you saw.",
+        }),
+      );
+
+      const inputs = {};
+      const field = (name, label, node, help) => {
+        const wrap = el("div", { class: "tk-field" });
+        wrap.appendChild(el("label", { class: "tk-label", text: label }));
+        wrap.appendChild(node);
+        if (help) wrap.appendChild(el("div", { class: "tk-help", text: help }));
+        inputs[name] = node;
+        form.appendChild(wrap);
+      };
+      const area = (value, placeholder, rows) => {
+        const t = el("textarea", { class: "tk-textarea", placeholder, rows: rows || 3, maxlength: 600 });
+        if (value) t.value = value;
+        return t;
+      };
+      const select = (options, value) => {
+        const s = el("select", { class: "tk-select" });
+        options.forEach((opt) => {
+          const node = el("option", { value: opt.value, text: opt.label });
+          if (String(value) === String(opt.value)) node.selected = true;
+          s.appendChild(node);
+        });
+        return s;
+      };
+
+      field(
+        "did",
+        "What did they do?",
+        area(draft.did, "Quote it or describe it. At least a sentence."),
+      );
+      field(
+        "rule",
+        "Which rule?",
+        select(
+          [{ value: "", label: "Pick the rule" }].concat(
+            rules.map((r, i) => ({ value: String(i + 1), label: i + 1 + ". " + r.title })),
+          ),
+          draft.rule || (info.rule ? String(info.rule) : ""),
+        ),
+      );
+      field("tried", "What was tried first?", select(TRIED_OPTIONS, draft.tried || ""));
+      field(
+        "why",
+        "Why was a milder step not enough?",
+        area(draft.why, "Required when nothing was tried first.", 2),
+      );
+      field(
+        "length",
+        "Why this length?",
+        area(draft.length, "What makes it a week, or for good, rather than a day.", 2),
+      );
+      const err = el("div", { class: "tk-err" });
+      form.appendChild(err);
+
+      const values = () => ({
+        did: inputs.did.value,
+        rule: inputs.rule.value,
+        tried: inputs.tried.value,
+        why: inputs.why.value,
+        length: inputs.length.value,
+      });
+      const saveDraft = () => {
+        try {
+          localStorage.setItem(draftKey, JSON.stringify(values()));
+        } catch (_) {}
+      };
+      form.addEventListener("input", saveDraft);
+      form.addEventListener("change", saveDraft);
+
+      const fail = (msg) => {
+        err.textContent = msg;
+        err.style.display = "block";
+      };
+      let busy = false;
+      const submit = async () => {
+        if (busy) return;
+        const v = values();
+        if (v.did.trim().length < 30) return fail("Say what they did, in at least a sentence.");
+        if (!v.rule) return fail("Pick the rule they broke.");
+        if (!v.tried) return fail("Say what was tried first.");
+        if (v.tried === "nothing" && v.why.trim().length < 20)
+          return fail("Explain why a milder step would not have worked.");
+        if (v.length.trim().length < 20) return fail("Say why this length.");
+        busy = true;
+        err.style.display = "none";
+        const res = await o.submit(v);
+        busy = false;
+        if (!res || !res.ok) return fail((res && res.error) || "The server did not accept it.");
+        try {
+          localStorage.removeItem(draftKey);
+        } catch (_) {}
+        ctrl.close();
+        resolve(v);
+      };
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        submit();
+      });
+
+      const ctrl = modal({
+        title: "Write up this block",
+        icon: '<i class="fas fa-pen-to-square"></i>',
+        subtitle: "Required for blocks of a week or longer",
+        locked: true,
+        body: form,
+        actions: [
+          {
+            label: "Save write-up",
+            kind: "primary",
+            onClick: () => {
+              submit();
+              return false;
+            },
+          },
+        ],
+      });
+      setTimeout(() => inputs.did.focus(), 50);
+    });
+  }
+
+  let activePop = null;
+
+  function popover(opts) {
+    const o = opts || {};
+    if (activePop) {
+      const same = activePop.key && activePop.key === o.key;
+      activePop.close();
+      if (same) return null;
+    }
+    const pop = el("div", { class: "tk-pop", role: "dialog" });
+    const arrow = el("div", { class: "tk-pop-arrow" });
+    pop.appendChild(arrow);
+    const slot = el("div", {
+      class: "tk-pop-slot",
+      style: "display:flex;flex-direction:column;min-height:0;flex:1;",
+    });
+    pop.appendChild(slot);
+    if (o.body) slot.appendChild(o.body);
+
+    function place() {
+      const a = o.anchor && o.anchor.getBoundingClientRect
+        ? o.anchor.getBoundingClientRect()
+        : null;
+      if (!a || window.matchMedia("(max-width:576px)").matches) {
+        pop.style.left = pop.style.top = pop.style.width = "";
+        return;
+      }
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const w = Math.min(390, vw - 20);
+      const h = pop.offsetHeight || 300;
+      let left = Math.round(a.left - 22);
+      left = Math.max(10, Math.min(left, vw - w - 10));
+      const above = a.top - 10 >= h || a.top > vh - a.bottom;
+      pop.classList.toggle("tk-pop-above", above);
+      pop.classList.toggle("tk-pop-below", !above);
+      pop.style.left = left + "px";
+      pop.style.width = w + "px";
+      if (above) {
+        pop.style.top = Math.max(8, a.top - 10 - h) + "px";
+      } else {
+        pop.style.top = Math.min(vh - h - 8, a.bottom + 10) + "px";
+      }
+      const ax = Math.max(14, Math.min(w - 26, a.left + Math.min(a.width / 2, 40) - left - 6));
+      arrow.style.left = ax + "px";
+    }
+
+    function close() {
+      if (activePop !== ctrl) return;
+      activePop = null;
+      pop.remove();
+      document.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("mousedown", onDown, true);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+      if (o.onClose) o.onClose();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        close();
+      }
+    }
+    function onDown(e) {
+      if (pop.contains(e.target)) return;
+      if (o.anchor && o.anchor.contains && o.anchor.contains(e.target)) return;
+      if (e.target.closest && e.target.closest(".tk-backdrop,.tk-pl-back,.tk-panel")) return;
+      close();
+    }
+    const ctrl = {
+      key: o.key || null,
+      close,
+      place,
+      setBody(node) {
+        slot.innerHTML = "";
+        if (node) slot.appendChild(node);
+        place();
+      },
+    };
+    activePop = ctrl;
+    document.body.appendChild(pop);
+    place();
+    requestAnimationFrame(place);
+    document.addEventListener("keydown", onKey, true);
+    document.addEventListener("mousedown", onDown, true);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return ctrl;
+  }
+
+  const DUR_RE = /\b(1h|6h|24h|3d|7d|30d|permanent)\b/;
+  const FILE_ICON = {
+    block: "fa-ban",
+    unblock: "fa-lock-open",
+    warn: "fa-bullhorn",
+    appeal: "fa-scale-balanced",
+    report: "fa-flag",
+    kick: "fa-user-slash",
+    "kick+ban": "fa-user-slash",
+    "wipe buffer": "fa-broom",
+    rename: "fa-user-secret",
+    "reset location": "fa-location-dot",
+    "turn pfp off": "fa-image-portrait",
+    "allow pfp": "fa-rotate-left",
+    freeze: "fa-snowflake",
+    unfreeze: "fa-snowflake",
+    silence: "fa-volume-xmark",
+    unsilence: "fa-volume-high",
+    "show rules": "fa-book",
+    "kill bot": "fa-robot",
+    "auto block": "fa-robot",
+    identity: "fa-id-card",
+    signin: "fa-right-to-bracket",
+    rename: "fa-pen",
+    "accepted-rules": "fa-book-open",
+    staffwork: "fa-shield-halved",
+  };
+  const FILE_LABEL = {
+    kick: "Kicked from a room",
+    "kick+ban": "Kicked and room-banned",
+    warn: "Warned",
+    "wipe buffer": "Typed text wiped",
+    rename: "Name reset",
+    "reset location": "Location reset",
+    "turn pfp off": "Picture turned off",
+    "allow pfp": "Picture allowed again",
+    freeze: "Typing frozen",
+    unfreeze: "Typing unfrozen",
+    silence: "Stopped from being read",
+    unsilence: "Can be read again",
+    "show rules": "Shown the rules",
+    "kill bot": "Bot stopped",
+    unblock: "Block lifted",
+    "unblock ip": "Block lifted",
+    "appeal filed": "Appealed the block",
+    "appeal lifted": "Appeal accepted, block lifted",
+    "appeal dismissed": "Appeal declined",
+    "appeal ended": "Appeal closed, block ended",
+    report: "Reported",
+  };
+
+  function fileWhat(ev) {
+    const base = ev.base || "";
+    if (ev.kind === "identity")
+      return String(ev.action || "").replace(/^\w/, (c) => c.toUpperCase());
+    if (ev.kind === "staffwork") {
+      const dur = DUR_RE.exec(ev.action || "");
+      const len = dur ? " · " + durationLabel(dur[1]) : "";
+      const what = ["ip block", "id block", "ban ip", "ban"].includes(base)
+        ? "Blocked" + len
+        : FILE_LABEL[base] || (ev.action || base).replace(/^\w/, (c) => c.toUpperCase());
+      return what + (ev.target ? ": " + ev.target : "");
+    }
+    const dur = DUR_RE.exec(ev.action || "");
+    const len = dur ? durationLabel(dur[1]) : ev.duration ? durationLabel(ev.duration) : "";
+    if (base === "auto block")
+      return "Blocked automatically" + (len ? " · " + len : "");
+    if (["ip block", "id block", "ban ip", "ban"].includes(base))
+      return "Blocked" + (len ? " · " + len : "") + (/\(range\)/.test(ev.action || "") ? " · network" : "");
+    if (base === "report")
+      return "Reported" + (/ for (.+)$/.test(ev.action || "") ? " for " + /for (.+)$/.exec(ev.action)[1] : "");
+    return FILE_LABEL[base] || (ev.action || base).replace(/^\w/, (c) => c.toUpperCase());
+  }
+
+  function ago(ts) {
+    const d = Math.max(0, Date.now() - ts);
+    const m = Math.floor(d / 60000);
+    if (m < 1) return "now";
+    if (m < 60) return m + "m ago";
+    const h = Math.floor(m / 60);
+    if (h < 48) return h + "h ago";
+    const days = Math.floor(h / 24);
+    if (days < 60) return days + "d ago";
+    return Math.floor(days / 30) + "mo ago";
+  }
+
+  function left(ms) {
+    if (ms <= 0) return "ending";
+    const m = Math.ceil(ms / 60000);
+    if (m < 60) return m + " min left";
+    const h = Math.floor(m / 60);
+    if (h < 48) return h + "h " + (m % 60) + "m left";
+    const d = Math.floor(h / 24);
+    return d + "d " + (h % 24) + "h left";
+  }
+
+  function fileCard(data, opts) {
+    const o = opts || {};
+    const d = data || {};
+    const wrap = el("div", { style: "display:flex;flex-direction:column;min-height:0;flex:1;" });
+
+    const head = el("div", { class: "tk-pop-head" });
+    const who = el("div", { class: "tk-pop-who" });
+    const nm = el("div", { class: "tk-pop-name", text: d.name || "Anonymous" });
+    if (d.staff) nm.appendChild(el("span", { class: "tk-chip " + (d.staff === "dev" ? "dev" : "mod"), text: d.staff === "dev" ? "ADMIN" : "MOD", style: "margin-left:7px" }));
+    if (d.online === false) nm.appendChild(el("span", { class: "tk-pop-off", text: "offline" }));
+    who.appendChild(nm);
+    if (d.names && d.names.length) {
+      const aka = el("div", { class: "tk-pop-aka" }, [
+        el("span", { class: "tk-pop-akal", text: "also" }),
+      ]);
+      d.names.slice(0, 4).forEach((n) =>
+        aka.appendChild(el("span", { class: "tk-pop-chip", text: n, title: n })),
+      );
+      if (d.names.length > 4)
+        aka.appendChild(el("span", { class: "tk-pop-chip", text: "+" + (d.names.length - 4) }));
+      who.appendChild(aka);
+    }
+    const status = el("div", { class: "tk-pop-status" });
+    if (d.block) {
+      const b = d.block;
+      status.appendChild(
+        el("span", {
+          class: "tk-pop-pill bad",
+          html:
+            '<i class="fas fa-ban"></i>' +
+            (b.permanent ? "Blocked · permanent" : "Blocked · " + escape(left(b.expiry - Date.now()))),
+        }),
+      );
+      if (b.covered === false)
+        status.appendChild(el("span", { class: "tk-pop-pill dim", text: "on another device" }));
+    } else {
+      status.appendChild(
+        el("span", { class: "tk-pop-pill ok", html: '<i class="fas fa-circle-check"></i>Not blocked' }),
+      );
+    }
+    if (d.evader)
+      status.appendChild(
+        el("span", { class: "tk-pop-pill warn", html: '<i class="fas fa-triangle-exclamation"></i>Evasion flag' }),
+      );
+    if (d.devices > 1)
+      status.appendChild(el("span", { class: "tk-pop-pill dim", text: d.devices + " devices" }));
+    who.appendChild(status);
+    head.appendChild(who);
+    const x = el("button", { class: "tk-pop-x", text: "×", title: "Close", "aria-label": "Close" });
+    x.addEventListener("click", () => o.onClose && o.onClose());
+    head.appendChild(x);
+    wrap.appendChild(head);
+
+    if (d.tenure && d.tenure.since) {
+      const t = d.tenure;
+      const day = 86400000;
+      const fmtDate = (ts) => new Date(ts).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+      const num = (n) => Math.round(n).toLocaleString();
+      const sinceDays = Math.floor((Date.now() - t.since) / day);
+      const atFloor = t.recordsSince && t.since - t.recordsSince < 3 * day;
+      const rows = [];
+      rows.push([
+        "Here since",
+        "<b>" + escape(fmtDate(t.since)) + "</b> · " + num(sinceDays) + " days" +
+          (atFloor ? " <em>at least: records only go back to " + escape(fmtDate(t.recordsSince)) + "</em>" : ""),
+        atFloor
+          ? "The site only started keeping records on " + fmtDate(t.recordsSince) + ". Anyone here before that shows this date."
+          : "First time any of their devices reached the site: " + new Date(t.since).toLocaleString(),
+      ]);
+      rows.push([
+        "Days visited",
+        "<b>" + num(t.days) + "</b> of the last " + (t.dayWindow || 90),
+        "Number of separate days they showed up, over the last " + (t.dayWindow || 90) + " days",
+      ]);
+      rows.push([
+        "Time in rooms",
+        "<b>" + num(t.hours) + " h</b> <em>any tab, idle included</em>",
+        "Hours spent sitting in a room since " + fmtDate(t.recordsSince) + ", whether or not they were looking at it",
+      ]);
+      if (t.activeSince)
+        rows.push([
+          "Actually looking",
+          "<b>" + num(t.activeHours) + " h</b> <em>tab in front, counted since " + escape(fmtDate(t.activeSince)) + "</em>",
+          "Hours with the room tab in front of them. This only started being counted on " + fmtDate(t.activeSince) + ", so it is short for everyone.",
+        ]);
+      const ten = el("div", { class: "tk-pop-tenure" });
+      rows.forEach(([label, html, title]) => {
+        const row = el("div", { class: "tk-pop-trow", title });
+        row.appendChild(el("span", { class: "tk-pop-tlabel", text: label }));
+        row.appendChild(el("span", { class: "tk-pop-tval", html }));
+        ten.appendChild(row);
+      });
+      wrap.appendChild(ten);
+    }
+
+    const c = d.counts || {};
+    const tiles = el("div", { class: "tk-pop-tiles" });
+    [
+      ["Actions", c.actions || 0, false],
+      ["Blocks", c.blocks || 0, (c.blocks || 0) > 0],
+      ["Appeals", c.appeals || 0, false],
+      ["Reports", c.reports || 0, (c.reports || 0) >= 3],
+      ["Names", c.identity || 0, false],
+    ].forEach(([label, n, hot]) =>
+      tiles.appendChild(
+        el("div", { class: "tk-pop-tile" + (hot ? " hot" : "") }, [
+          el("b", { text: String(n) }),
+          el("span", { text: label }),
+        ]),
+      ),
+    );
+    wrap.appendChild(tiles);
+
+    if (d.block) {
+      const b = d.block;
+      const until = b.permanent
+        ? "Does not end on its own."
+        : "Ends " + new Date(b.expiry).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) + ".";
+      const byLine = b.auto ? "Placed automatically" : b.by ? "By " + b.by : "";
+      const sinceLine = b.since
+        ? "Since " + new Date(b.since).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
+        : "";
+      const now = el("div", { class: "tk-pop-now" }, [
+        el("div", { html: "<b>Current block.</b> " + escape(b.reason || "No reason written down.") }),
+        el("div", {
+          class: "tk-pop-nowsub",
+          text: [byLine, sinceLine, until].filter(Boolean).join(" · "),
+        }),
+      ]);
+      wrap.appendChild(now);
+    }
+
+    const list = el("div", { class: "tk-pop-list" });
+    const events = Array.isArray(d.events) ? d.events : [];
+    if (!events.length)
+      list.appendChild(el("div", { class: "tk-pop-empty", text: "Nothing on file. Nobody has had to act on this person." }));
+    events.forEach((ev) => {
+      const kind = ev.kind || "action";
+      const icon = FILE_ICON[ev.base] || FILE_ICON[kind] || "fa-circle";
+      const row = el("div", { class: "tk-pop-row k-" + kind });
+      row.appendChild(el("div", { class: "tk-pop-dot", html: '<i class="fas ' + icon + '"></i>' }));
+      const main = el("div", { class: "tk-pop-main" });
+      const what = el("div", { class: "tk-pop-what" });
+      if (kind === "staffwork") what.appendChild(el("span", { class: "tk-pop-tag", text: "AS STAFF" }));
+      what.appendChild(document.createTextNode(fileWhat(ev)));
+      if (ev.by) what.appendChild(el("span", { class: "tk-pop-by", text: " · " + ev.by }));
+      main.appendChild(what);
+      if (ev.reason) main.appendChild(el("div", { class: "tk-pop-why", text: ev.reason }));
+      if (ev.quote) main.appendChild(el("div", { class: "tk-pop-quote", text: ev.quote }));
+      row.appendChild(main);
+      row.appendChild(
+        el("div", {
+          class: "tk-pop-when",
+          text: ago(ev.at || 0),
+          title: ev.at ? new Date(ev.at).toLocaleString() : "",
+        }),
+      );
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+
+    const foot = el("div", { class: "tk-pop-foot" });
+    const months = Math.round((d.window || 0) / (30 * 24 * 3600 * 1000));
+    foot.appendChild(el("span", { text: months ? "Last " + months + " months, newest first" : "Newest first" }));
+    if (o.onActions)
+      foot.appendChild(
+        el("button", { class: "tk-btn", text: "Actions", onclick: () => o.onActions() }),
+      );
+    wrap.appendChild(foot);
+    return wrap;
+  }
+
+  window.StaffUI = {
+    rank,
+    escape,
+    el,
+    modal,
+    popover,
+    fileCard,
+    alert,
+    confirm,
+    prompt,
+    menu,
+    panel,
+    toast,
+    actionToast,
+    copy,
+    help,
+    communityRules: fetchCommunityRules,
+    communityRuleField,
+    ruleReason,
+    DURATIONS,
+    durationOptions,
+    durationLabel,
+    blockDialog,
+    writeup,
+    writeupLines,
+    triedLabel,
+  };
+})();

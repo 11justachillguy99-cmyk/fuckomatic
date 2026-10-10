@@ -1,0 +1,18 @@
+services:
+  fuckomatic:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Set these in a .env file next to this compose file (see .env.example)
+      - SESSION_SECRET=${SESSION_SECRET:-}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
+      - DEV_KEY=${DEV_KEY:-}
+      - DEV_KEY_HASH=${DEV_KEY_HASH:-}
+      - MAIN_DEV_KEY_HASH=${MAIN_DEV_KEY_HASH:-}
+    volumes:
+      - fuckomatic-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  fuckomatic-data:

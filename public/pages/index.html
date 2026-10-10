@@ -1,0 +1,1180 @@
+<!-- 
+    Fuckomatic Lobby Page
+    =====================
+    This HTML document serves as the entry point for the Fuckomatic web application's lobby page. 
+    The page allows users to sign in, create chat rooms, and join existing rooms. It includes links 
+    to external resources and relies on various CSS stylesheets and JavaScript files for styling 
+    and functionality.
+    Main Features:
+    - Sign-in form to enter a chat room with a name and optional location.
+    - Create a chat room with different privacy options (public, semi-private, private).
+    - Choose how many people fit in the room (5 to 10).
+    - View and join available chat rooms.
+    - Real-time server statistics display.
+    - External links to information about Fuckomatic.
+    - Uses socket.io for real-time communication with the server.
+    External Resources:
+    - lobby.css (styling)
+    - lobby.js, lobby-client.js (client-side functionality)
+    - socket.io.js (for real-time chat functionality)
+    
+    Note: The use of the <%= nonce %> tag indicates dynamic nonce generation, likely for Content 
+    Security Policy (CSP) purposes to allow only authorized scripts to run.
+    Last updated: 2024
+-->
+<!doctype html>
+<html lang="en">
+  <!-- Head Section: Metadata and External Resources -->
+  <head>
+    <!-- Specifies the document's character encoding as UTF-8 -->
+    <meta charset="UTF-8" />
+    <!-- Ensures proper scaling on mobile devices by setting the viewport properties -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- SEO Enhanced Title -->
+    <title>Fuckomatic - The World's First Real-Time Chat Room</title>
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Fuckomatic is the world's first multi-user chat room, offering real-time character-by-character communication. Create or join chat rooms and experience the original chat technology from 1973."
+    />
+    <meta
+      name="keywords"
+      content="Fuckomatic, chat room, real-time chat, online communication, character-by-character chat, original chat room, PLATO system"
+    />
+    <meta name="author" content="The Fuckomatic Project" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://fuckomatic.co/index.html" />
+    <!-- Open Graph Meta Tags for social sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://fuckomatic.co/index.html" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <meta
+      property="og:title"
+      content="Fuckomatic - The First Multi-User Chat Room Since 1973"
+    />
+    <meta
+      property="og:description"
+      content="Join Fuckomatic, the world's original chat room from 1973. Create rooms, chat in real-time, and see messages as they're typed character by character."
+    />
+    <meta
+      property="og:image"
+      content="https://fuckomatic.co/images/fuckomatic-social-share.png"
+    />
+    <meta property="og:site_name" content="Fuckomatic" />
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Fuckomatic - The First Multi-User Chat Room Since 1973"
+    />
+    <meta
+      name="twitter:description"
+      content="Join Fuckomatic, the world's original chat room from 1973. Create rooms, chat in real-time, and see messages as they're typed character by character."
+    />
+    <meta
+      name="twitter:image"
+      content="https://fuckomatic.co/images/fuckomatic-social-share.png"
+    />
+    <!-- Schema.org JSON-LD for structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Fuckomatic",
+        "url": "https://fuckomatic.co",
+        "description": "The world's first multi-user chat room created in 1973, offering real-time character-by-character text communication.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://fuckomatic.co/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Fuckomatic",
+        "applicationCategory": "CommunicationApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "datePublished": "2024-06-14",
+        "softwareVersion": "Open Source Edition",
+        "author": {
+          "@type": "Organization",
+          "name": "The Fuckomatic Project"
+        },
+        "description": "The world's first multi-user chat room created in 1973, offering real-time character-by-character text communication."
+      }
+    </script>
+    <!-- Link to external stylesheet for lobby-specific styles -->
+    <link rel="stylesheet" href="stylesheets/lobby.css?v=1.3.0" />
+    <!-- Applies the saved custom theme before first paint -->
+    <script src="js/theme-engine.js?v=2.4.1"></script>
+    <link rel="stylesheet" href="stylesheets/theme-editor.css?v=1.1.0" />
+    <link rel="stylesheet" href="stylesheets/suggest-board.css?v=2.0.2" />
+    <link rel="stylesheet" href="stylesheets/info-modal.css?v=1.2.0" />
+    <link rel="stylesheet" href="stylesheets/site-stats.css?v=1.1.0" />
+    <link rel="stylesheet" href="stylesheets/mod-apply.css?v=1.2.1" />
+    <link rel="stylesheet" href="stylesheets/announce.css?v=1.0.0" />
+    <link rel="stylesheet" href="stylesheets/effects.css?v=1.3.2" />
+    <!-- Toastr official CSS -->
+    <link rel="stylesheet" href="stylesheets/notify.css?v=1.1.0" />
+    <!-- Custom overrides for a black/orange theme -->
+    <!-- Favicon icon for the website, displayed in the browser tab -->
+    <link rel="icon" type="image/png" href="images/icons/favicon.png" />
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <style>
+      /* Stats for Nerds Modal Styles */
+      .stats-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+      }
+
+      .stats-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .stats-modal-content {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        border: 2px solid #ff9800;
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 800px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        position: relative;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .stats-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #444;
+      }
+
+      .stats-modal-title {
+        color: #ff9800;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .stats-modal-close {
+        background: none;
+        border: none;
+        color: #ccc;
+        font-size: 28px;
+        cursor: pointer;
+        padding: 0;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+      }
+
+      .stats-modal-close:hover {
+        background-color: rgba(255, 152, 0, 0.1);
+        color: #ff9800;
+        transform: rotate(90deg);
+      }
+
+      .stats-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+
+      .stats-card {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 20px;
+        transition:
+          transform 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .stats-card:hover {
+        transform: translateY(-2px);
+        border-color: #ff9800;
+      }
+
+      .stats-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .stats-card-icon {
+        font-size: 20px;
+        color: #ff9800;
+      }
+
+      .stats-card-title {
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .stats-card-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #ff9800;
+        margin-bottom: 8px;
+      }
+
+      .stats-card-subtitle {
+        color: #ccc;
+        font-size: 12px;
+        margin: 0;
+      }
+
+      .utilization-section {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .utilization-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .utilization-title {
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .utilization-percentage {
+        color: #ff9800;
+        font-size: 18px;
+        font-weight: bold;
+        margin-left: auto;
+      }
+
+      .utilization-bar {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        height: 12px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+
+      .utilization-fill {
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          #4caf50 0%,
+          #ff9800 60%,
+          #f44336 100%
+        );
+        transition: width 0.8s ease;
+        border-radius: 10px;
+      }
+
+      .utilization-legend {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #999;
+      }
+
+      .room-types-section {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .room-types-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .room-types-title {
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .room-types-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+      }
+
+      .room-type-item {
+        text-align: center;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+      }
+
+      .room-type-item:hover {
+        border-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
+      }
+
+      .room-type-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff9800;
+        margin-bottom: 5px;
+      }
+
+      .room-type-label {
+        color: #ccc;
+        font-size: 12px;
+        margin: 0;
+      }
+
+      .stats-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 15px;
+        border-top: 1px solid #444;
+        font-size: 12px;
+        color: #888;
+      }
+
+      .stats-last-updated {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .stats-refresh-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4caf50;
+        animation: pulse 2s infinite;
+      }
+
+      .stats-refresh-indicator.offline {
+        background: #f44336;
+        animation: none;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.3;
+        }
+      }
+
+      .stats-error-message {
+        background: rgba(244, 67, 54, 0.1);
+        border: 1px solid #f44336;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        color: #f44336;
+        margin-bottom: 20px;
+      }
+
+      .stats-loading {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+
+      .stats-loading-spinner {
+        border: 3px solid rgba(255, 152, 0, 0.1);
+        border-top: 3px solid #ff9800;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .refresh-button {
+        background: rgba(255, 152, 0, 0.1);
+        border: 1px solid #ff9800;
+        color: #ff9800;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .refresh-button:hover {
+        background: #ff9800;
+        color: #000;
+      }
+
+      .fa-chart-line {
+        padding-right: 10px;
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        .stats-modal-content {
+          padding: 20px;
+          width: 95%;
+          margin: 10px;
+        }
+
+        .stats-dashboard {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .room-types-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .stats-modal-title {
+          font-size: 20px;
+        }
+
+        .stats-footer {
+          flex-direction: column;
+          gap: 10px;
+          text-align: center;
+        }
+      }
+
+      #noRoomsMessage {
+        color: var(--tk-text, white);
+      }
+
+      #connectionStatus {
+        display: none !important;
+      }
+
+      .fa-key {
+        margin-right: 10px;
+      }
+
+      .room {
+        padding-bottom: 8px;
+      }
+
+      .fa-bullhorn {
+        margin-right: 10px;
+      }
+
+      .fa-gauge-high {
+        margin-right: 10px;
+      }
+
+      .fa-user-pen {
+        margin-right: 10px;
+      }
+    </style>
+    <script src="https://unpkg.com/idb@8.0.3/build/umd.js"></script>
+  </head>
+  <!-- Body Section: Main content and layout of the page -->
+  <body>
+    <!-- Button to toggle the left panel (menu) visibility -->
+    <button class="toggle-button" id="toggleButton">Menu</button>
+    <!-- Floating tools pinned to the top right of the room list -->
+    <div class="corner-tools">
+      <a
+        href="#"
+        id="themeEditorLink"
+        class="corner-tool"
+        title="Customize the look"
+        aria-label="Customize the look"
+      >
+        <i class="fas fa-palette"></i>
+      </a>
+    </div>
+    <!-- Container that holds both the left (menu) and right (content) panels -->
+    <div class="container">
+      <!-- Left panel containing the menu options and forms -->
+      <div class="left-panel" id="leftPanel">
+        <!-- Button to hide the menu panel -->
+        <button class="hide-menu-button" id="hideMenuButton">
+          ...Hide Menu
+        </button>
+        <!-- Panel header displaying the Fuckomatic logo and the word "Lobby" -->
+        <div class="panel-header">
+          <span class="fuckomatic">Fuckomatic™</span>
+          <span class="lobby">Lobby</span>
+          <nav class="panel-header-links">
+            <a href="about.html">About</a>
+            <span aria-hidden="true">|</span>
+            <a href="#" id="staffGuideLink" title="What each staff badge means"
+              >Staff</a
+            >
+          </nav>
+        </div>
+        <div class="external-links">
+          <a
+            href="https://discord.com/invite/ZMX7tayay9"
+            title="Discord"
+            aria-label="Discord"
+            rel="noopener noreferrer"
+          >
+            <i class="fab fa-discord"></i><span>Discord</span>
+          </a>
+          <a
+            href="themes.html"
+            id="themesButton"
+            title="Themes"
+            aria-label="Themes"
+            rel="noopener noreferrer"
+          >
+            <i class="fas fa-paintbrush"></i><span>Themes</span>
+          </a>
+          <a
+            href="#"
+            id="updateNotesButton"
+            title="Update Notes"
+            aria-label="Update Notes"
+            rel="noopener noreferrer"
+          >
+            <i class="fas fa-bullhorn"></i><span>Updates</span>
+          </a>
+          <a
+            href="#"
+            id="siteStatsLink"
+            title="Site Stats"
+            aria-label="Site Stats"
+            rel="noopener noreferrer"
+          >
+            <i class="fas fa-chart-column"></i><span>Stats</span>
+          </a>
+          <a
+            href="#"
+            id="staffLoginLink"
+            title="Staff Access"
+            aria-label="Staff Access"
+            rel="noopener noreferrer"
+          >
+            <i class="fas fa-key"></i><span>Staff</span>
+          </a>
+          <a
+            href="botcreator.html"
+            id="botCreatorLink"
+            title="Bot Creator"
+            aria-label="Bot Creator"
+            rel="noopener noreferrer"
+          >
+            <i class="fas fa-robot"></i><span>Bot Creator</span>
+          </a>
+        </div>
+
+        <!-- Section where users can provide a name to be known as in the chat -->
+        <div class="known-as-section">
+          <p>Be Known As...</p>
+        </div>
+        <!-- Form for signing in to the chat room -->
+        <div id="logform">
+          <form>
+            <!-- Text input for the user's name, required field -->
+            <input
+              type="text"
+              placeholder="Your Name"
+              required
+              maxlength="15"
+            />
+            <!-- Location: blank falls back to the classic "On The Web" -->
+            <input
+              type="text"
+              placeholder="Location - On The Web"
+              maxlength="20"
+            />
+            <!-- Optional profile picture: one of ours, or a Discord avatar -->
+            <div class="pfp-card" id="pfpCard">
+              <div class="pfp-card-head">
+                <span class="pfp-ico"><i class="fas fa-user"></i></span>
+                <span class="pfp-card-title">Profile picture</span>
+                <img
+                  id="pfpPreview"
+                  class="pfp-preview"
+                  alt=""
+                  style="display: none"
+                />
+                <label class="pfp-switch" title="Show a picture next to your name">
+                  <input type="checkbox" id="pfpMasterEnable" />
+                  <span class="pfp-slider"></span>
+                </label>
+              </div>
+              <div class="pfp-card-body" id="pfpCardBody" style="display: none">
+                <div class="pfp-seg" role="tablist" aria-label="Picture source">
+                  <button
+                    type="button"
+                    class="pfp-seg-btn"
+                    id="pfpSourcePreset"
+                    data-source="preset"
+                    role="tab"
+                    aria-selected="true"
+                  >
+                    Our pictures
+                  </button>
+                  <button
+                    type="button"
+                    class="pfp-seg-btn"
+                    id="pfpSourceDiscord"
+                    data-source="discord"
+                    role="tab"
+                    aria-selected="false"
+                  >
+                    Discord
+                  </button>
+                </div>
+                <div id="presetPane">
+                  <div
+                    class="preset-grid"
+                    id="presetGrid"
+                    role="radiogroup"
+                    aria-label="Choose a profile picture"
+                  ></div>
+                </div>
+                <div id="discordPane" style="display: none">
+                  <input
+                    type="text"
+                    id="pfpDiscordId"
+                    placeholder="Your Discord user ID"
+                    maxlength="20"
+                    inputmode="numeric"
+                    autocomplete="off"
+                  />
+                  <button type="button" class="pfp-help-btn" id="pfpHelpBtn">
+                    <i class="fas fa-circle-question"></i> How do I find my ID?
+                  </button>
+                  <div class="pfp-help" id="pfpHelp" style="display: none">
+                    <ol>
+                      <li>
+                        Open Discord and go to <b>Settings &gt; Advanced</b>,
+                        then turn on <b>Developer Mode</b>.
+                      </li>
+                      <li>
+                        Right click your own name or picture anywhere in
+                        Discord and pick <b>Copy User ID</b>.
+                      </li>
+                      <li>Paste the number here and press <b>Change</b>.</li>
+                    </ol>
+                    <p>
+                      Your Discord picture will show next to your name in the
+                      lobby and in rooms. It refreshes when you sign in again.
+                      Turn the switch off to remove it.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Submit button with an icon for signing in -->
+            <button type="submit">
+              Sign In
+              <img
+                src="images/icons/pencil.png"
+                alt="Arrow"
+                class="arrow-icon"
+              />
+            </button>
+          </form>
+        </div>
+        <!-- Section for creating a chat room -->
+        <div class="createRoom">
+          <p>Create A Room...</p>
+          <a href="#" class="learn-more">Learn More</a>
+        </div>
+        <!-- Form for specifying room details (room name, type, layout) -->
+        <div id="lobbyForm">
+          <!-- Input field for the room name (max length: 20 characters) -->
+          <input type="text" placeholder="Room Name" maxlength="25" />
+          <!-- Radio buttons for selecting the type of room (public, semi-private, private) -->
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="roomType" value="public" />
+              <img
+                src="images/icons/public.svg"
+                alt="Public Room Icon"
+                class="radio-icon"
+              />
+              <span>Public Room</span>
+            </label>
+            <label>
+              <input type="radio" name="roomType" value="semi-private" />
+              <img
+                src="images/icons/semi-private.svg"
+                alt="Semi-Private Room Icon"
+                class="radio-icon"
+              />
+              <span>Semi-Private Room</span>
+            </label>
+            <label>
+              <input type="radio" name="roomType" value="private" />
+              <img
+                src="images/icons/secret.svg"
+                alt="Private Room Icon"
+                class="radio-icon"
+              />
+              <span>Private Room</span>
+            </label>
+          </div>
+          <!-- Input field for access code, hidden unless a private room is selected -->
+          <div id="accessCodeInput" style="display: none">
+            <input
+              type="text"
+              placeholder="6-digit Access Code"
+              maxlength="6"
+              pattern="\d{6}"
+            />
+          </div>
+          <!-- How many people fit in the room. The layout is no longer chosen
+               here: there is a button in the room itself that flips it. -->
+          <p class="roomLay">
+            Room Size:
+            <span id="roomSizeValue">5</span> people
+          </p>
+          <div class="size-slider">
+            <input
+              type="range"
+              id="roomSizeSlider"
+              min="5"
+              max="500"
+              step="1"
+              value="5"
+              aria-label="How many people can be in the room"
+            />
+            <div class="size-scale" aria-hidden="true">
+              <span>5</span>
+              <span>104</span>
+              <span>203</span>
+              <span>302</span>
+              <span>401</span>
+              <span>500</span>
+            </div>
+          </div>
+          <!-- Whether bots may join this room -->
+          <p class="roomLay">Allow bots to join?</p>
+          <div class="radio-group inline">
+            <label>
+              <input type="radio" name="allowBots" value="yes" checked />
+              <span>Yes</span>
+            </label>
+            <label>
+              <input type="radio" name="allowBots" value="no" />
+              <span>No</span>
+            </label>
+          </div>
+          <!-- Button to initiate the chat based on the provided inputs -->
+          <div class="button-container">
+            <button type="button" class="go-chat-button">Go Chat...</button>
+          </div>
+        </div>
+        <!-- Sits just above the icon strip at the foot of the panel: it is a
+             thing to go and do, so it reads after the room form, not before it. -->
+        <div class="ideas-card">
+          <div class="ideas-card-head">
+            <i class="fas fa-lightbulb"></i>
+            <span>Ideas &amp; Bugs</span>
+          </div>
+          <p class="ideas-card-sub">
+            Got an idea for Fuckomatic, or found something broken? Post it here
+            and everyone can vote on it.
+          </p>
+          <a href="#" id="suggestBoxLink" class="ideas-card-btn">
+            Open the board
+          </a>
+        </div>
+
+        <!-- Sits at the foot of the panel: these are side errands, not the
+             thing anybody came to do. -->
+      </div>
+      <!-- Right panel where available rooms and sign-in messages are displayed -->
+      <div class="right-panel">
+        <!-- Header inviting the user to join a room -->
+        <h2>Join A Room ...</h2>
+        <!-- Message prompting the user to sign in before viewing chat rooms.
+             This is the first thing a new visitor has to act on, so it is a
+             callout rather than a line of text. -->
+        <div id="signInMessage" style="display: block">
+          <div class="sim-head">
+            <i class="fas fa-user-pen" aria-hidden="true"></i>
+            <strong>Pick a username to get started</strong>
+          </div>
+          <span class="sim-sub"
+            >Enter a name under "Be Known As..." to see and join rooms.</span
+          >
+        </div>
+        <!-- Section where the list of rooms will be dynamically added -->
+        <div class="roomList" style="display: none">
+          <div class="rooms" id="dynamicRoomList">
+            <!-- Placeholder for dynamically generated room list -->
+          </div>
+          <!-- Message displayed when no rooms are available -->
+          <div id="noRoomsMessage" style="display: none">
+            <p>No rooms available at the moment. Why not create one?</p>
+          </div>
+          <!-- Copyright and version information for the lobby page -->
+          <div class="copyright-info">
+            <span class="version">Open Source Edition</span>
+            <span class="dot">•</span>
+            <span class="creator"
+              ><a href="about.html" class="creator-link"
+                >The Fuckomatic Project</a
+              ></span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats for Nerds Modal -->
+    <div id="statsModal" class="stats-modal">
+      <div class="stats-modal-content">
+        <div class="stats-modal-header">
+          <h2 class="stats-modal-title">
+            <i class="fas fa-chart-line"></i>
+            Stats for Nerds
+          </h2>
+          <button class="stats-modal-close" id="statsModalClose">
+            &times;
+          </button>
+        </div>
+
+        <div id="statsLoadingSection" class="stats-loading">
+          <div class="stats-loading-spinner"></div>
+          <p>Loading server statistics...</p>
+        </div>
+
+        <div
+          id="statsErrorSection"
+          class="stats-error-message"
+          style="display: none"
+        >
+          <i class="fas fa-exclamation-triangle"></i>
+          Unable to fetch server statistics. Please try again.
+        </div>
+
+        <div id="statsContentSection" style="display: none">
+          <div class="stats-dashboard">
+            <div class="stats-card">
+              <div class="stats-card-header">
+                <i class="fas fa-door-open stats-card-icon"></i>
+                <h3 class="stats-card-title">Active Rooms</h3>
+              </div>
+              <div class="stats-card-value" id="modalStatsRooms">-/-</div>
+              <p class="stats-card-subtitle">Current / Maximum Limit</p>
+            </div>
+
+            <div class="stats-card">
+              <div class="stats-card-header">
+                <i class="fas fa-users stats-card-icon"></i>
+                <h3 class="stats-card-title">Users Online</h3>
+              </div>
+              <div class="stats-card-value" id="modalStatsUsers">-</div>
+              <p class="stats-card-subtitle">Currently chatting</p>
+            </div>
+
+            <div class="stats-card">
+              <div class="stats-card-header">
+                <i class="fas fa-server stats-card-icon"></i>
+                <h3 class="stats-card-title">Server Version</h3>
+              </div>
+              <div class="stats-card-value" id="modalStatsVersion">-</div>
+              <p class="stats-card-subtitle">Current build</p>
+            </div>
+
+            <div class="stats-card">
+              <div class="stats-card-header">
+                <i class="fas fa-clock stats-card-icon"></i>
+                <h3 class="stats-card-title">Uptime</h3>
+              </div>
+              <div class="stats-card-value" id="modalStatsUptime">-</div>
+              <p class="stats-card-subtitle">Server online time</p>
+            </div>
+          </div>
+
+          <div class="utilization-section">
+            <div class="utilization-header">
+              <i class="fas fa-chart-bar stats-card-icon"></i>
+              <h3 class="utilization-title">Server Utilization (Beta)</h3>
+              <span
+                class="utilization-percentage"
+                id="modalUtilizationPercentage"
+                >-</span
+              >
+            </div>
+            <div class="utilization-bar">
+              <div
+                class="utilization-fill"
+                id="modalUtilizationFill"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="utilization-legend">
+              <span>Low Usage</span>
+              <span>Optimal</span>
+              <span>High Usage</span>
+            </div>
+          </div>
+
+          <div class="room-types-section">
+            <div class="room-types-header">
+              <i class="fas fa-layer-group stats-card-icon"></i>
+              <h3 class="room-types-title">Room Distribution</h3>
+            </div>
+            <div class="room-types-grid">
+              <div class="room-type-item">
+                <div class="room-type-value" id="modalStatsPublic">-</div>
+                <p class="room-type-label">Public Rooms</p>
+              </div>
+              <div class="room-type-item">
+                <div class="room-type-value" id="modalStatsSemiPrivate">-</div>
+                <p class="room-type-label">Semi-Private</p>
+              </div>
+              <div class="room-type-item">
+                <div class="room-type-value" id="modalStatsPrivate">-</div>
+                <p class="room-type-label">Private Rooms</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-footer">
+          <div class="stats-last-updated">
+            <i class="fas fa-sync-alt"></i>
+            <span id="modalLastUpdated">Never</span>
+            <div
+              class="stats-refresh-indicator"
+              id="modalRefreshIndicator"
+            ></div>
+          </div>
+          <button class="refresh-button" id="modalRefreshButton">
+            <i class="fas fa-redo"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="roomInfoModal" class="modal">
+      <div class="modal-content-info">
+        <span class="close-modal">&times;</span>
+        <h2>Creating a Room in Fuckomatic</h2>
+        <div class="modal-section">
+          <h3>Room Types</h3>
+          <div class="room-type-info">
+            <div class="type-item">
+              <img
+                src="images/icons/public.svg"
+                alt="Public Room Icon"
+                class="info-icon"
+              />
+              <h4>Public Room</h4>
+              <p>
+                Open to everyone. Visible in the room list and anyone can join
+                instantly.
+              </p>
+            </div>
+            <div class="type-item">
+              <img
+                src="images/icons/semi-private.svg"
+                alt="Semi-Private Room Icon"
+                class="info-icon"
+              />
+              <h4>Semi-Private Room</h4>
+              <p>
+                Visible in the room list, but you set a 6-digit code and only
+                people who have it can get in.
+              </p>
+            </div>
+            <div class="type-item">
+              <img
+                src="images/icons/secret.svg"
+                alt="Private Room Icon"
+                class="info-icon"
+              />
+              <h4>Private Room</h4>
+              <p>
+                Hidden from the room list. The only way in is the invite link
+                from inside the room.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-section">
+          <h3>Room Size and Layout</h3>
+          <div class="layout-info">
+            <div class="layout-item">
+              <img
+                src="images/icons/vertical.svg"
+                alt="Room Size Icon"
+                class="info-icon"
+              />
+              <h4>Room Size</h4>
+              <p>
+                The slider sets how many people can be in your room, from 5 up
+                to 10. Once it is full, nobody else can enter.
+              </p>
+            </div>
+            <div class="layout-item">
+              <img
+                src="images/icons/horizontal.svg"
+                alt="Room Layout Icon"
+                class="info-icon"
+              />
+              <h4>Layout</h4>
+              <p>
+                Rooms start as side-by-side columns. There is a button in the
+                top right of the room to stack them one above the other instead
+                - it only changes your own screen, and phones always stack.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-section">
+          <h3>Bots</h3>
+          <div class="layout-info">
+            <div class="layout-item">
+              <img
+                src="images/icons/public.svg"
+                alt="Bots Icon"
+                class="info-icon"
+              />
+              <h4>Allow bots to join</h4>
+              <p>
+                Anyone can build a bot in the Bot Creator and send it into a
+                public room. Turn this off and your room stays people only. A
+                bot takes a spot like anyone else, and bigger rooms allow more
+                of them.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Custom Modal -->
+    <div id="customModal" class="custom-modal">
+      <div class="modal-content">
+        <span class="close-modal-btn">&times;</span>
+        <h3 id="modalTitle">Modal Title</h3>
+        <p id="modalMessage">Modal message goes here.</p>
+        <div id="modalInputContainer" style="display: none">
+          <input
+            type="text"
+            id="modalInput"
+            maxlength="6"
+            pattern="[0-9]*"
+            inputmode="numeric"
+          />
+          <p class="input-error" id="modalInputError"></p>
+        </div>
+        <div class="modal-buttons">
+          <button id="modalCancelBtn" class="modal-btn">Cancel</button>
+          <button id="modalConfirmBtn" class="modal-btn modal-confirm-btn">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- External scripts with both nonce and version -->
+    <script nonce="<%= nonce %>" src="js/jquery.min.js?v=1.0.2"></script>
+    <script nonce="<%= nonce %>" src="js/modernnotify.min.js?v=1.1.0"></script>
+    <script nonce="<%= nonce %>" src="js/notify.js?v=1.0.0"></script>
+    <script nonce="<%= nonce %>" src="js/lobby.js?v=2.1.0"></script>
+    <script nonce="<%= nonce %>" src="/socket.io/socket.io.js?v=1.0.1"></script>
+    <script nonce="<%= nonce %>" src="js/staff-ui.js?v=1.11.0"></script>
+    <script nonce="<%= nonce %>" src="js/desk.js?v=1.1.0"></script>
+    <script nonce="<%= nonce %>" src="js/identity.js?v=1.0.1"></script>
+    <script
+      nonce="<%= nonce %>"
+      src="js/connection-overlay.js?v=1.2.0"
+    ></script>
+    <script nonce="<%= nonce %>" src="js/lobby-client.js?v=2.29.0"></script>
+    <script nonce="<%= nonce %>" src="js/suggest-board.js?v=2.1.0"></script>
+    <script nonce="<%= nonce %>" src="js/site-stats.js?v=1.1.0"></script>
+    <script nonce="<%= nonce %>" src="js/staff-guide-modal.js?v=1.1.0"></script>
+    <script nonce="<%= nonce %>" src="js/announce.js?v=1.2.0"></script>
+    <script nonce="<%= nonce %>" src="js/warning.js?v=1.1.0"></script>
+    <script nonce="<%= nonce %>" src="js/staff-key.js?v=1.0.0"></script>
+    <script nonce="<%= nonce %>" src="js/theme-editor.js?v=3.2.0"></script>
+    <!-- POPUP SYSTEM: Add this script tag to enable update popups -->
+    <script nonce="<%= nonce %>" src="js/popup.js?v=4.0.0"></script>
+  </body>
+</html>
